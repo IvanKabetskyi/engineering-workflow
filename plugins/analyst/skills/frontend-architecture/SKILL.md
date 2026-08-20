@@ -26,8 +26,15 @@ the first feature.
 
 ## Phase 0 — Design intake (MANDATORY, design is never skipped)
 
-1. **Figma exists → Figma is the truth.** Get the file/frames (Figma connector/MCP or
-   exported frames) and extract into:
+1. **Figma exists → Figma is the truth.** Reading Figma requires the Figma connection —
+   if no Figma MCP is available in the session, STOP and have the human set it up first
+   (it's a one-time setup):
+   - Official Figma plugin (recommended): `claude plugin install figma@claude-plugins-official`,
+     then authenticate via `/plugin` → Installed → figma → browser OAuth.
+   - Or the Dev Mode local server: Figma desktop app → Dev Mode → enable MCP server, then
+     `claude mcp add --transport http figma-desktop http://127.0.0.1:3845/mcp`.
+   (Fallback with no MCP: exported frames/images attached by the human.)
+   Get the file/frames and extract into:
    - `design-map.md/.json` — tokens: colors, spacing, typography, radii (feed `core/theme`;
      zero hardcoded hex downstream);
    - a per-screen spec (same format as migration-planner's visual-spec template): layout,

@@ -41,29 +41,16 @@ The dev plugins deliberately exclude product-docs — business docs are the ANAL
 plugin's artifact; /new-feature's first gate tells devs to involve their analyst rather
 than invent business rules.
 
-The two scaffolding CLIs are standalone tools and also run via npx (no plugin needed):
+The two scaffolding CLIs are standalone tools published on npm (no plugin, no git link):
 
 ```
-npx --package=github:ivankabetskyi/engineering-workflow create-frontend-project my-app --ui=joy --data=axios
-npx --package=github:ivankabetskyi/engineering-workflow create-backend-project my-service --db=mongo --sockets
+npx engineering-workflow frontend my-app --ui=joy --data=axios
+npx engineering-workflow backend my-service --db=mongo --sockets
 ```
 
 Maintainers: `plugin/` is the master; edit there, then `node scripts/build-plugins.mjs`
 regenerates `plugins/{full,frontend,backend,analyst}` and marketplace.json — commit both.
 
-
-### Get the app-installable .plugin files from the repo
-
-Each role plugin is also packaged as a `.plugin` file (installable in the Claude app by
-opening/attaching the file — no Claude Code needed):
-
-- Direct download: `dist/engineering-workflow-{full|frontend|backend|analyst}.plugin` in
-  this repo (GitHub → dist/ → download raw).
-- Or from Releases (versioned; maintainers publish with
-  `gh release create v0.1.0 dist/*.plugin`).
-
-Note: file-installed plugins don't auto-update — re-download when a new version ships;
-Claude Code marketplace installs update via `claude plugin update`.
 
 ## What's inside
 
@@ -89,7 +76,9 @@ Jest/supertest on the backend; Socket.IO with mirrored typed constants; graphify
 for inventories and review blast-radius.
 
 **Prerequisites** (personal/account skills, not bundled): grilling, llm-council,
-grill-with-docs, to-spec, to-tickets.
+grill-with-docs, to-spec, to-tickets. For UI design intake, the Figma connection:
+`claude plugin install figma@claude-plugins-official` (or the Figma Dev Mode local MCP).
+Team usage documentation lives in Confluence.
 
 ## The rules that make it work
 

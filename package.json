@@ -4,10 +4,12 @@
   "description": "Gated AI engineering workflow for Claude Code: business docs \u2192 domain \u2192 architecture \u2192 TDD \u2192 review, plus migration planning and project scaffolding. 4 commands, 14 skills, artifact gates, human-final-PASS.",
   "type": "module",
   "bin": {
+    "engineering-workflow": "bin/cli.mjs",
     "create-frontend-project": "plugin/skills/create-frontend-project/cli/create-frontend-project.mjs",
     "create-backend-project": "plugin/skills/create-backend-project/cli/create-backend-project.mjs"
   },
   "files": [
+    "bin",
     "plugin",
     "plugins",
     "scripts"
@@ -29,5 +31,8 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ivankabetskyi/engineering-workflow.git"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
