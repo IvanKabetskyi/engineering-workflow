@@ -51,6 +51,20 @@ npx --package=github:ivankabetskyi/engineering-workflow create-backend-project m
 Maintainers: `plugin/` is the master; edit there, then `node scripts/build-plugins.mjs`
 regenerates `plugins/{full,frontend,backend,analyst}` and marketplace.json — commit both.
 
+
+### Get the app-installable .plugin files from the repo
+
+Each role plugin is also packaged as a `.plugin` file (installable in the Claude app by
+opening/attaching the file — no Claude Code needed):
+
+- Direct download: `dist/engineering-workflow-{full|frontend|backend|analyst}.plugin` in
+  this repo (GitHub → dist/ → download raw).
+- Or from Releases (versioned; maintainers publish with
+  `gh release create v0.1.0 dist/*.plugin`).
+
+Note: file-installed plugins don't auto-update — re-download when a new version ships;
+Claude Code marketplace installs update via `claude plugin update`.
+
 ## What's inside
 
 **Commands** (`plugin/commands/`): the four orchestrators above — thin conductors that

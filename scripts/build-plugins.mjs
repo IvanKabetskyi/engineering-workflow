@@ -68,6 +68,23 @@ Object.entries(ROLES).forEach(([role, spec]) => {
   console.log(`plugins/${role}: ${spec.skills.length} skills, ${spec.commands.length} commands`);
 });
 
+/* package each role plugin as a .plugin file (zip) into dist/ */
+import { execSync } from 'node:child_process';
+
+const dist = join(root, 'dist');
+rmSync(dist, { recursive: true, force: true });
+mkdirSync(dist, { recursive: true });
+Object.keys(ROLES).forEach((role) => {
+  const src = join(out, role);
+  const file = join(dist, `engineering-workflow-${role}.plugin`);
+  if (process.platform === 'win32') {
+    execSync(`powershell -NoProfile -Command "Compress-Archive -Path '${src}\\*' -DestinationPath '${file}.zip' -Force; Move-Item -Force '${file}.zip' '${file}'"`);
+  } else {
+    execSync(`cd "${src}" && zip -qr "${file}" .`);
+  }
+  console.log(`dist/engineering-workflow-${role}.plugin`);
+});
+
 writeFileSync(join(root, '.claude-plugin', 'marketplace.json'), JSON.stringify({
   name: 'ivankabetskyi',
   owner: { name: 'Ivan Kabetskyi' },
