@@ -1,0 +1,8 @@
+{
+  "name": "engineering-workflow-analyst",
+  "description": "Business analysts / staff engineers: product-docs (existing-docs intake or grilled from a prompt), domain-modeling, both architecture record skills — the front of every workflow.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Ivan Kabetskyi"
+  }
+}

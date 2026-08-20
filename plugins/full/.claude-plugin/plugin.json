@@ -1,0 +1,8 @@
+{
+  "name": "engineering-workflow-full",
+  "description": "The complete engineering workflow: all 4 commands, all 14 skills, reviewer agent.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Ivan Kabetskyi"
+  }
+}

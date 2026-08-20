@@ -1,0 +1,8 @@
+{
+  "name": "engineering-workflow-frontend",
+  "description": "Frontend team: FE architecture + TDD pipeline + scaffolder + migration-planner. Business docs come from the analyst plugin.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Ivan Kabetskyi"
+  }
+}

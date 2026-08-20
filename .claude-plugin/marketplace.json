@@ -1,0 +1,28 @@
+{
+  "name": "ivankabetskyi",
+  "owner": {
+    "name": "Ivan Kabetskyi"
+  },
+  "plugins": [
+    {
+      "name": "engineering-workflow-full",
+      "source": "./plugins/full",
+      "description": "The complete engineering workflow: all 4 commands, all 14 skills, reviewer agent."
+    },
+    {
+      "name": "engineering-workflow-frontend",
+      "source": "./plugins/frontend",
+      "description": "Frontend team: FE architecture + TDD pipeline + scaffolder + migration-planner. Business docs come from the analyst plugin."
+    },
+    {
+      "name": "engineering-workflow-backend",
+      "source": "./plugins/backend",
+      "description": "Backend team: BE architecture + TDD pipeline + scaffolder. Business docs come from the analyst plugin."
+    },
+    {
+      "name": "engineering-workflow-analyst",
+      "source": "./plugins/analyst",
+      "description": "Business analysts / staff engineers: product-docs (existing-docs intake or grilled from a prompt), domain-modeling, both architecture record skills — the front of every workflow."
+    }
+  ]
+}

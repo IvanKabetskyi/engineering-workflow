@@ -1,0 +1,33 @@
+{
+  "name": "engineering-workflow",
+  "version": "0.1.0",
+  "description": "Gated AI engineering workflow for Claude Code: business docs \u2192 domain \u2192 architecture \u2192 TDD \u2192 review, plus migration planning and project scaffolding. 4 commands, 14 skills, artifact gates, human-final-PASS.",
+  "type": "module",
+  "bin": {
+    "create-frontend-project": "plugin/skills/create-frontend-project/cli/create-frontend-project.mjs",
+    "create-backend-project": "plugin/skills/create-backend-project/cli/create-backend-project.mjs"
+  },
+  "files": [
+    "plugin",
+    "plugins",
+    "scripts"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude-code",
+    "plugin",
+    "workflow",
+    "tdd",
+    "scaffold",
+    "code-review",
+    "migration"
+  ],
+  "author": "Ivan Kabetskyi",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ivankabetskyi/engineering-workflow.git"
+  }
+}
