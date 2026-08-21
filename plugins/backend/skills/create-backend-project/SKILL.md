@@ -42,8 +42,12 @@ dotenv, tsconfig-paths/tsc-alias bare imports, airbnb-base + prettier (4-space, 
 and FOUR passing test suites: liveness e2e, notes e2e (create/read/validation-400/404),
 usecase unit at the repository seam, entity unit.
 
-Delete the `note` slice once the first real entity exists — it's a teaching example, not
-a keeper.
+The `note` slice is a TEACHING EXAMPLE proving the wiring and giving you the pattern to
+copy per real entity. Its fate is the reconcile rule (/new-project's domain-materialization
+phase): if the domain model has an entity by that name, REWRITE the slice into the real
+entity (real fields, behavior, BR-derived tests — the placeholder title/body shape never
+survives); if it doesn't, DELETE the whole slice. Either way, every entity in the domain
+model gets its own slice built the same layered way.
 
 ## After scaffolding
 
@@ -60,7 +64,10 @@ the pipeline (backend-unit-test → backend-development → backend-code-review)
 
 - The CLI's `files` map is the only template source; bump versions deliberately and
   re-verify (`--db=none` variant runs fully in any sandbox — no DB needed).
-- Verified end-to-end 2026-08-20: `--db=none --sockets --events --cron --extras=husky,ci`
-  (npm install + tsc + eslint + jest all green, 6 tests).
-- mongo flavor requires a reachable MONGO_URI for e2e; the intTest env must point at a
-  test database, never dev.
+- Verified end-to-end 2026-08-20/21: `--db=none --sockets --events --cron` (install + tsc
+  + eslint + jest green, 6 tests) and `--db=mongo --dates=luxon` (tsc + eslint green;
+  test run needs internet for the first mongod binary download).
+- mongo flavor is test-self-sufficient: the three-file jest setup (globalSetup boots ONE
+  mongodb-memory-server per run and publishes MONGO_URI; afterEnv connects mongoose and
+  wipes collections per test; globalTeardown stops it). Set MONGO_URI yourself to run the
+  same suite against a real engine — never the dev database.

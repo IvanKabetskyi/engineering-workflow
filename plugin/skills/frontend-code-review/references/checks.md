@@ -34,7 +34,10 @@ grep -rn "interface OwnProps" src/
 grep -rn "console\.log" src/
 
 # hardcoded hex outside the theme                                            → Major (design)
-grep -rnE "#[0-9a-fA-F]{3,8}\b" src/ --include="*.tsx" | grep -v "core/theme"
+grep -rnE "#[0-9a-fA-F]{3,8}\b" src/ --include="*.tsx" | grep -v "assets/theme"
+
+# date library imported outside utils/date (dates are SEPARATE)              → Major
+grep -rn "from 'luxon'\|from 'date-fns'" src/ | grep -v "utils/date"
 
 # leftover focus/skip in tests                                               → Critical
 grep -rn "\.only(\|\.skip(\|fdescribe\|fit(" src/ --include="*.test.*"

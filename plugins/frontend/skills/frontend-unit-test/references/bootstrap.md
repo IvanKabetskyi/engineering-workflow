@@ -72,7 +72,7 @@ import { CssVarsProvider } from '@mui/joy/styles';
 import { ReactElement, ReactNode } from 'react';
 
 import { rootReducer } from 'store/slices'; // adapt to the repo's real store setup
-import { theme } from 'core/theme';          // adapt
+import { theme } from 'assets/theme';          // adapt
 import { messages } from 'translations';     // adapt: the real catalog
 
 type Options = Omit<RenderOptions, 'wrapper'> & {

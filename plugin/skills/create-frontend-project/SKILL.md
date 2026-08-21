@@ -52,7 +52,7 @@ and writes the same files by hand — the `files` map in the CLI IS the template
   import/order path groups matching the structure, no-magic-numbers, no-implicit-coercion,
   printWidth 120). eslint stays on 8.x — the airbnb config is eslintrc-style.
 - **TS**: strict, `baseUrl: src`, `moduleResolution: bundler`, vitest + jest-dom types.
-- **Structure** (the dispatch-assist skeleton): `core/theme`, `store/slices` (RTK +
+- **Structure** (the dispatch-assist skeleton): `assets/theme`, `store/slices` (RTK +
   typed hooks), `pages/Home` (lazy-routed), `components/{ui,form,common}`, `constants`,
   `hooks`, `routing/Router` (Suspense + wildcard), `requests/health` (example operation,
   typed), `utils/testing`, `mappers`, `types`, `icons` (+ `services/api` for axios,

@@ -61,6 +61,19 @@ grep -rnA2 "catch" src/application src/infrastructure | grep -B1 "^\s*}"
 # socket/event string literals at emit/on sites (constants only)        → Major
 grep -rnE "\.(emit|on)\(['\"][A-Z_]+['\"]" src/ | grep -v constants
 
+# cron job without the Redis lock guard (multi-node duplicate execution) → Critical
+grep -rln "cron.schedule" src/ | xargs grep -L "isJobProcessing"
+
+# Socket.IO server without the Redis adapter in a multi-replica service  → Critical
+grep -rln "new Server(" src/application/modules/socket/ | xargs grep -L "createAdapter"
+
+# silent safeParse that continues on failure (validation must THROW or   → Major
+# explicitly log-and-stop; check each hit)
+grep -rn "safeParse" src/ | grep -v test
+
+# date library imported outside services/date (dates are SEPARATE)       → Major
+grep -rn "from 'luxon'\|from 'date-fns'" src/ | grep -v "services/date"
+
 # res.status outside controllers/middlewares                            → Major
 grep -rn "res\.status" src/ | grep -v "controllers\|middlewares"
 
@@ -89,6 +102,25 @@ JWT handling sane; no secrets in code/logs; zod validation on EVERY input surfac
 params/body/query, socket payloads, cron inputs from queues); payload/file-upload limits;
 injection surfaces (raw regex from user input, `$where`, string-built queries); rate/loop
 concerns on fan-out code.
+
+### Domain-parity check (part of Pass 2, mandatory on new projects/features)
+
+Compare `src/domain/` against the architecture record's entity list: every listed entity
+has its three-file folder (**missing real entity = Critical** — the business logic doesn't
+exist); a domain folder still carrying the SCAFFOLD EXAMPLE's placeholder shape
+(title/body Note with no model-derived behavior) = Major — it was neither deleted nor
+rewritten to the model's real entity; a domain folder for an entity the record doesn't
+know = Major (undocumented domain — amend the record or remove the code).
+
+Placement direction also checks BOTH ways: an application-level entity (AppUser/session/
+preferences — anything the domain model doesn't name) sitting in `src/domain/` = Major
+(it belongs in `application/entities/`); a business entity from the model sitting in
+`application/entities/` = Major (it escaped the domain layer). Repositories for
+application entities still live in `infrastructure/repositories/` like everything else —
+an application entity reaching the DB without one = the usual boundary Critical. Do NOT
+flag an application entity for lacking the domain three-file shape — that shape is domain
+canon only; application entities take whatever type the app's needs dictate (as recorded
+in the architecture record).
 
 ### Pass 5 — contract parity
 

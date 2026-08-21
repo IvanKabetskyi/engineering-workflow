@@ -1,6 +1,6 @@
 {
   "name": "engineering-workflow",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Gated AI engineering workflow for Claude Code: business docs \u2192 domain \u2192 architecture \u2192 TDD \u2192 review, plus migration planning and project scaffolding. 4 commands, 14 skills, artifact gates, human-final-PASS.",
   "type": "module",
   "bin": {

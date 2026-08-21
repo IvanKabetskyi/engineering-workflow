@@ -99,6 +99,9 @@ frontend and backend together, never one side alone (schemas and knowledge are s
 
 ## Theme & styling
 
+- **The theme lives in `src/assets/theme.ts`** (dispatch-assist canon) — the theme is a
+  static app resource, NOT business logic; it never belongs in `core/` (core is the domain
+  layer). `assets/` holds theme, images, fonts.
 - ALL design tokens live in the theme (Joy `extendTheme` / Material `createTheme` / antd
   `ConfigProvider theme`). **Zero hardcoded hex in components** — reference tokens.
 - MUI repos: `sx`, not `className`; single-use styles stay INLINE `sx` at the usage site —
@@ -133,6 +136,14 @@ canonical entity type impossible, so there is no strictness, no core layer, and 
 no frontend business logic (dispatch-assist's state today; documented, not fixable until
 the axios/REST migration). With GraphQL, stay on per-operation types and treat core/ as
 unavailable; with REST + real docs, core/ is MANDATORY for any entity used on 2+ pages.
+
+## Dates — one module, one library
+
+ALL date logic lives in `utils/date/` — `index.ts` (named functions wrapping the date
+library) + `formats.ts` (named format constants). The library (luxon PREFERRED for new
+apps; date-fns accepted — dispatch-assist uses it) is imported ONLY there; components,
+mappers, and hooks import the named functions, never the library. The choice is asked at
+project creation and recorded; frontend and backend of one product use the SAME library.
 
 ## Server data (request modules — transport behind a seam)
 

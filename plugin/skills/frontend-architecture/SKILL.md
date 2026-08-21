@@ -35,7 +35,7 @@ the first feature.
      `claude mcp add --transport http figma-desktop http://127.0.0.1:3845/mcp`.
    (Fallback with no MCP: exported frames/images attached by the human.)
    Get the file/frames and extract into:
-   - `design-map.md/.json` — tokens: colors, spacing, typography, radii (feed `core/theme`;
+   - `design-map.md/.json` — tokens: colors, spacing, typography, radii (feed `assets/theme`;
      zero hardcoded hex downstream);
    - a per-screen spec (same format as migration-planner's visual-spec template): layout,
      exact labels, control types, states (empty/loading/error), interactions.

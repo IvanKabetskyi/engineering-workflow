@@ -6,6 +6,19 @@ Orchestrate a NEW PROJECT through the engineering workflow. Thin conductor: skil
 work; you enforce order via artifact gates and the state file
 (`docs/workflow/project.state.md`, same format as /new-feature's).
 
+## Conductor behavior (this is why the command exists)
+
+The user does NOT know the workflow — the plugin does. Never wait for the user to ask for
+the next step and never ask "what would you like to do":
+
+- On EVERY invocation: read the state file + ticket files, announce in one line where the
+  feature stands, and immediately START executing the current phase (invoke its skill).
+- When a phase completes: continue straight into the next phase if the session has room;
+  otherwise end by telling the user the exact next action ("open a session and run
+  /new-feature — it will do X").
+- The user is consulted ONLY at genuine decision points: grilling answers, record
+  confirmation, overrides, and the final PASS. Everything else is the conductor's job.
+
 ## Phases and gates
 
 1. **Business docs (full)** — run the product-docs skill completely: vision, users/roles,
@@ -18,8 +31,26 @@ work; you enforce order via artifact gates and the state file
 3. **Scaffold** — GATE: domain done. Run the create-frontend-project and/or
    create-backend-project CLI (ask the option questions: UI lib, data layer, port, db,
    sockets, extras). Artifact: scaffolded repo(s) with lint + tsc + tests GREEN before any
-   feature work. The human runs npm install and confirms green.
-4. **First feature** — hand off to /new-feature (which starts at its phase 2, since
+   feature work. The human runs npm install and confirms green. Then wire the graph:
+   the scaffold's `.mcp.json` already registers the graphify MCP — run
+   `graphify extract . --code-only` (graphify skill) so `graphify-out/graph.json` exists
+   from day one; every later phase queries it.
+4. **Domain materialization** — GATE: scaffold green. BEFORE any feature: create the REAL
+   domain from the Phase-2 domain model. Every entity in the model gets its
+   `src/domain/<entity>/` three-file set (types.ts vocabulary, entity.ts class with
+   behavior, service.ts with the domain-owned Repository contract) — written tests-first
+   (entity behavior tests from the model's invariants/BR-numbers). **Reconcile the
+   scaffold's example slice (`note`) against the model**: if the model has NO such entity,
+   delete the whole slice (domain/note + its requestDto/usecases/controllers/repository/
+   tests); if the model DOES have that entity (a booking app with meeting Notes, say),
+   REWRITE the example into the model's REAL entity — its actual fields, behavior methods,
+   invariants, and BR-derived tests — the placeholder title/body shape is not your domain.
+   Either way, the model's entity list is the only truth: ALL its entities exist when this
+   phase ends (a project with `note` reconciled but `room` missing has still skipped it).
+   Application entities (AppUser, sessions — needed to run the app but absent from the
+   domain model) do NOT go to `src/domain/`: they live in `application/entities/`, with
+   their repositories in `infrastructure/repositories/` like everything else.
+5. **First feature** — hand off to /new-feature (which starts at its phase 2, since
    business docs and domain already exist). Every subsequent feature enters through
    /new-feature.
 

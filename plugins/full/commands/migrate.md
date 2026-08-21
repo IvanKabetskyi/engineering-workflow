@@ -8,6 +8,19 @@ application and the decision record play those roles.
 
 State file: `docs/workflow/migration-<source>.state.md` (same format as /new-feature's).
 
+## Conductor behavior (this is why the command exists)
+
+The user does NOT know the workflow — the plugin does. Never wait for the user to ask for
+the next step and never ask "what would you like to do":
+
+- On EVERY invocation: read the state file + ticket files, announce in one line where the
+  feature stands, and immediately START executing the current phase (invoke its skill).
+- When a phase completes: continue straight into the next phase if the session has room;
+  otherwise end by telling the user the exact next action ("open a session and run
+  /new-feature — it will do X").
+- The user is consulted ONLY at genuine decision points: grilling answers, record
+  confirmation, overrides, and the final PASS. Everything else is the conductor's job.
+
 ## Phases and gates
 
 1. **Intake (mandatory, all three)** — GATE for everything: per migration-planner Phase 0:
@@ -20,7 +33,7 @@ State file: `docs/workflow/migration-<source>.state.md` (same format as /new-fea
 3. **Inventories** — graph-first (graphify extract on source; MCP queries when registered;
    manual fallback): target-patterns.md verified against real files, source-map.md complete.
 4. **Chunk plan** — locked sizing (foundation → translations → grid per page → modal per
-   form → shell → panel batches → cleanup); published via to-tickets with blocking edges;
+   form → shell → panel batches → cleanup); written as DISK TICKETS (docs/workflow/tickets/<migration>/, same format as /new-feature — to-tickets additionally publishes to the tracker when available);
    prompts generated from the chunk template (TDD STEP 0 + both gates in every prompt).
 5. **Execution** — tmux chains per the runner template: skip-if-report-exists,
    stop-on-missing-report, git commit/push disallowed, one report per prompt. Findings →

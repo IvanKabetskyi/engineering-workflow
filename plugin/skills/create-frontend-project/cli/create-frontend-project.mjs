@@ -37,6 +37,7 @@ if (!name) name = await ask('Project name', 'my-frontend-app');
 const ui = UI_LIBS.includes(flags.ui) ? flags.ui : await ask(`UI library (${UI_LIBS.join('/')})`, 'joy');
 const data = DATA_LAYERS.includes(flags.data) ? flags.data : await ask(`Data layer (${DATA_LAYERS.join('/')})`, 'axios');
 const port = flags.port || (await ask('Dev port', '3000'));
+const dates = ['luxon', 'date-fns'].includes(flags.dates) ? flags.dates : await ask('Date library (luxon/date-fns, luxon preferred)', 'luxon');
 const extras = (flags.extras ?? (await ask(`Extras (${EXTRAS.join(',')} or none)`, 'husky,ci')))
   .split(',').map((s) => s.trim()).filter((s) => EXTRAS.includes(s));
 rl.close();
@@ -75,6 +76,8 @@ const devDeps = {
 if (ui === 'joy') Object.assign(deps, { '@mui/joy': '^5.0.0-beta.52', '@emotion/react': '^11.11.4', '@emotion/styled': '^11.11.0', '@fontsource/inter': '^5.0.17' });
 if (ui === 'material') Object.assign(deps, { '@mui/material': '^9.0.0', '@emotion/react': '^11.11.4', '@emotion/styled': '^11.11.0', '@mui/icons-material': '^9.0.0', '@fontsource/roboto': '^5.0.12' });
 if (ui === 'antd') Object.assign(deps, { antd: '^6.0.0' });
+if (dates === 'luxon') Object.assign(deps, { luxon: '^3.7.0' }), Object.assign(devDeps, { '@types/luxon': '^3.6.0' });
+else Object.assign(deps, { 'date-fns': '^4.1.0' });
 if (data === 'axios') Object.assign(deps, { axios: '^1.7.0' });
 if (data === 'graphql') Object.assign(deps, { '@apollo/client': '^3.11.0', graphql: '^16.9.0' });
 if (extras.includes('intl')) Object.assign(deps, { 'react-intl': '^10.0.0' });
@@ -117,7 +120,7 @@ files['index.html'] = `<!doctype html>
 </html>
 `;
 
-const ALIASES = ['core', 'store', 'pages', 'components', 'constants', 'hooks', 'routing', 'translations', 'utils', 'mappers', 'types', 'requests', 'services', 'icons'];
+const ALIASES = ['assets', 'core', 'store', 'pages', 'components', 'constants', 'hooks', 'routing', 'translations', 'utils', 'mappers', 'types', 'requests', 'services', 'icons'];
 
 files['vite.config.ts'] = `/// <reference types="vitest/config" />
 import * as path from 'path';
@@ -176,7 +179,10 @@ files['.env.example'] = 'BACKEND_URL=http://localhost:8080\n';
 const uiMcp = ui === 'antd'
   ? { antd: { command: 'npx', args: ['-y', '@ant-design/cli', 'mcp'] } }
   : { 'mui-mcp': { command: 'npx', args: ['-y', '@mui/mcp@latest'] } };
-files['.mcp.json'] = JSON.stringify({ mcpServers: uiMcp }, null, 2);
+// graphify: repo code-graph MCP (windows: py; mac/linux: swap command to python3).
+// Serves graphify-out/graph.json — run `graphify extract . --code-only` first (graphify skill).
+const graphifyMcp = { graphify: { command: 'py', args: ['-m', 'graphify.serve', 'graphify-out/graph.json'] } };
+files['.mcp.json'] = JSON.stringify({ mcpServers: { ...uiMcp, ...graphifyMcp } }, null, 2);
 files['.gitignore'] = ['node_modules', 'dist', 'coverage', '.env', '.idea', '.vscode', 'graphify-out/'].join('\n') + '\n';
 
 /* eslint: the dispatch-assist canon config, path groups matching the scaffolded structure */
@@ -284,7 +290,7 @@ const wrapJsx = (innerLines, indent) => {
   ].join('\n');
 };
 
-files['src/core/theme/index.ts'] = themeByUi[ui];
+files['src/assets/theme.ts'] = themeByUi[ui];
 
 files['src/main.tsx'] = `import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -293,7 +299,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 ${p.imp}
 import { store } from 'store';
 
-import { theme } from 'core/theme';
+import { theme } from 'assets/theme';
 
 import { App } from './App';
 
@@ -394,6 +400,21 @@ export const useAppSelector = useSelector.withTypes<RootState>();
 `;
 
 files['src/constants/index.ts'] = `export const TOKEN_KEY = '${name}-token';\n`;
+
+files['src/utils/date/formats.ts'] = `export const DISPLAY_DATE = '${dates === 'luxon' ? 'yyyy-MM-dd' : 'yyyy-MM-dd'}';\n`;
+files['src/utils/date/index.ts'] = dates === 'luxon'
+  ? `import { DateTime } from 'luxon';
+
+import { DISPLAY_DATE } from 'utils/date/formats';
+
+export const formatDisplayDate = (iso: string): string => DateTime.fromISO(iso).toFormat(DISPLAY_DATE);
+`
+  : `import { format, parseISO } from 'date-fns';
+
+import { DISPLAY_DATE } from 'utils/date/formats';
+
+export const formatDisplayDate = (iso: string): string => format(parseISO(iso), DISPLAY_DATE);
+`;
 
 if (data === 'axios') {
   files['src/services/api/index.ts'] = `import axios from 'axios';
@@ -502,7 +523,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 ${p.imp}
 
-import { theme } from 'core/theme';
+import { theme } from 'assets/theme';
 
 import { rootReducer } from 'store/slices';
 
@@ -686,5 +707,6 @@ Next steps:
   npm run lint && npm run tsc && npm test
   git init && git add -A
 ${extras.includes('husky') ? '  npm run prepare   # activates husky' : ''}
+  graphify extract . --code-only   # builds graphify-out/graph.json; .mcp.json already registers the MCP (mac/linux: edit command py -> python3)
 Canon: frontend-development skill. Tests-first: frontend-unit-test skill.
 `);

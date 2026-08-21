@@ -22,6 +22,29 @@ Jest + ts-jest, `testEnvironment: node`, `moduleDirectories: ['node_modules', '<
 (bare imports work in tests), supertest for e2e, `NODE_ENV=intTest`, `--runInBand` (e2e
 tests share state; parallel workers corrupt it), `--forceExit` guarded by proper teardown.
 
+**Timeouts**: `testTimeout: 30000` in jest.config (DB-backed e2e regularly exceeds jest's
+5s default — "Exceeded timeout of 5000 ms" on a repository call almost always means the
+DB connection never happened, not a slow test). A test that legitimately needs more gets
+an explicit per-test timeout; never "fix" a timeout by removing the assertion.
+
+**The test database — the canonical three-file setup** (scaffold default; the same suite
+runs against a real engine by just setting MONGO_URI):
+- `src/test/globalSetup.ts` — boots ONE mongodb-memory-server for the whole run and
+  publishes its URI via `process.env.MONGO_URI`; if MONGO_URI is already set it steps
+  aside entirely (that's the real-engine escape hatch); `launchTimeout: 60000` because a
+  first launch (binary download + macOS Gatekeeper verification) routinely exceeds the
+  10s library default; the failure message tells you the MONGOMS_DEBUG=1 and docker
+  fallback moves.
+- `src/test/afterEnv.ts` (setupFilesAfterEnv) — per-suite mongoose lifecycle:
+  `beforeAll` connects (app.ts deliberately never connects — server.ts owns it in prod,
+  THIS file owns it in tests; without it every repository call buffers until timeout);
+  **`afterEach` wipes every collection** — per-TEST isolation, no cross-test data bleed;
+  `afterAll` drops the database and disconnects.
+- `src/test/globalTeardown.ts` — stops the memory server.
+
+Never the dev database, in any mode. A team may point MONGO_URI at a dedicated intTest
+database (driver-rest-service approach) — the setup above already supports it unchanged.
+
 ## Two layers, both mandatory per operation
 
 ### 1. Unit tests — the repository seam

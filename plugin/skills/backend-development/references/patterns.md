@@ -44,9 +44,61 @@ export default DriverEntity;
 ```
 
 Private data, `static create`, getters, BEHAVIOR methods. Business invariants live in these
-methods (or `domain/<entity>/service.ts` for multi-entity logic) — never in usecases, never
-in controllers. If a usecase contains an `if` about business state, ask whether it belongs
-on the entity.
+methods — never in usecases, never in controllers. If a usecase contains an `if` about
+business state, ask whether it belongs on the entity.
+
+## domain/ — service with a domain-owned Repository contract
+
+```ts
+// src/domain/driver/service.ts — the DOMAIN declares the interface it needs
+type Repository = {
+    updateTagName: (tagId: string, tagName: string) => Promise<void>;
+    setDeskIdByTerminal: (deskId: string, terminal: string) => Promise<void>;
+    deleteDriversTags: (tagIds: string[]) => Promise<void>;
+};
+
+class DriverService {
+    constructor(private readonly repository: Repository) {}
+
+    generate(data: Omit<DriverType, 'id'>): DriverEntity {
+        const id = newId();
+
+        return DriverEntity.create({ ...data, id: id.toString() });
+    }
+
+    updateTagsName(tag: Tag): Promise<void> {
+        return this.repository.updateTagName(tag.id, tag.name);
+    }
+}
+```
+
+Dependency inversion, domain-side: infrastructure's repository SATISFIES this structural
+type; the domain never imports infrastructure. `types.ts` next to it holds the status
+unions and value types every layer shares. **The wiring rule: the repository is injected
+into the domain SERVICE; usecases inject the service and every entity operation flows
+through it** (`usecase → service → repository`) — a usecase importing a repository
+directly is a review finding.
+
+## services/date — the ONLY place the date library lives
+
+```ts
+// src/services/date/formats.ts — named format constants, nothing else
+export const HOURS_OF_SERVICE = 'hh:mm';
+
+// src/services/date/index.ts — functions wrapping the library (luxon preferred)
+import { DateTime } from 'luxon';
+
+export const getOffset = (date?: string): number => {
+    if (!date) {
+        return 0;
+    }
+
+    return DateTime.fromISO(date).offset;
+};
+```
+
+Every date manipulation is a NAMED function here; callers import the function, never the
+library. A `DateTime.`/`format(` outside services/date is a review finding.
 
 ## application/requestDto — zod at every input surface
 
@@ -184,11 +236,93 @@ socket.on(JOIN_ROOM, (data: unknown) => {
 Constants `as const` in `modules/socket/constants` (mirrored by the frontend), zod on every
 inbound payload, real work delegated to usecases, emits through a typed wrapper.
 
-## Events & cron — thin triggers
+## Events & cron — thin triggers, cron ALWAYS lock-guarded
 
 Event names as constants; one listener file per event; listener = validate → usecase.run.
-Cron: `cron.schedule(NAMED_CADENCE, () => usecase.run(...))` — a cron job is a controller
-with a clock; inline logic in a job is a finding.
+
+Cron — THE canonical approach (every replica runs the schedule, so the Redis lock is
+mandatory; this exact class shape is the reference — one file per job under
+`application/services/cron/<job-name>/`):
+
+```ts
+import cron from 'node-cron';
+
+const PROCESSING_SYNC_EMPLOYEES_JOB_NAME = 'PROCESSING_SYNC_EMPLOYEES_JOB_NAME';
+const PROCESSING_SYNC_EMPLOYEES_JOB_VALUE = '1';
+const TTL_IN_SECONDS = 595; // slightly UNDER the */10 cadence — the lock self-expires
+
+export class SyncEmployeesService {
+    private cron: typeof cron;
+
+    private task: ReturnType<typeof cron.schedule>;
+
+    constructor(
+        private upstreamApiService: UpstreamApiService,
+        private appEventEmitter: AppEventEmitter,
+        private redisService: RedisService,
+    ) {
+        this.cron = cron;
+        this.task = this.cron.schedule('*/10 * * * *', this.run.bind(this));
+    }
+
+    private async isJobProcessing(): Promise<boolean> {
+        const value = await this.redisService.getStringValue(PROCESSING_SYNC_EMPLOYEES_JOB_NAME);
+
+        return value === PROCESSING_SYNC_EMPLOYEES_JOB_VALUE;
+    }
+
+    private async setJobProcessing(): Promise<void> {
+        await this.redisService.setStringExpiredValue(
+            PROCESSING_SYNC_EMPLOYEES_JOB_NAME,
+            PROCESSING_SYNC_EMPLOYEES_JOB_VALUE,
+            TTL_IN_SECONDS,
+        );
+    }
+
+    private async run(): Promise<void> {
+        if (await this.isJobProcessing()) {
+            return; // another node holds this tick
+        }
+
+        await this.setJobProcessing();
+
+        const employees = await this.upstreamApiService.getEmployees();
+
+        employees.forEach((employee) => {
+            this.appEventEmitter.emitEmployeeUpdate({ payload: employee });
+        });
+    }
+
+    start(): void { this.task.start(); }
+    stop(): void { this.task.stop(); }
+}
+```
+
+Why each piece matters: the LOCK IS TAKEN BEFORE THE WORK (check → set → run, so a slow
+run can't double-fire from another node); the TTL is under the cadence so a crashed node's
+lock self-expires before the next tick — no manual unlock, no stuck jobs; the job is a
+CLASS with injected services (unit-testable at the seam like any usecase) and an explicit
+start()/stop() lifecycle; the work itself is delegation — fetch via an infrastructure
+service, then EMIT EVENTS per item so listeners/usecases do the real logic. A cron file
+containing business logic, or a `cron.schedule` outside a lock-guarded class, is a
+Critical review finding.
+
+## Socket.IO multi-node — the Redis adapter
+
+```ts
+import { createAdapter } from '@socket.io/redis-adapter';
+
+const pubClient = redisClient.duplicate();
+const subClient = redisClient.duplicate();
+await Promise.all([pubClient.connect(), subClient.connect()]);
+
+const io = new Server(httpServer, { transports: ['websocket'] });
+io.adapter(createAdapter(pubClient, subClient));
+```
+
+Without the adapter, `io.to(room).emit(...)` reaches only sockets connected to THIS node —
+on AWS with 2+ replicas, users on other nodes silently miss events. Mandatory whenever
+replicas > 1.
 
 ## config & logging
 

@@ -19,10 +19,19 @@ context.
 ## Install (once per machine)
 
 - Windows: install real Python first (`winget install Python.Python.3.11`, NEW terminal —
-  the Store `python` stub is not Python), then `py -m pip install graphifyy`. If
+  the Store `python` stub is not Python), then `py -m pip install "graphifyy[mcp]"`. If
   `graphify` isn't recognized, add Python's Scripts folder to the user PATH or use
   `py -m graphify`.
-- macOS/Linux: `pipx install graphifyy`.
+- macOS/Linux: `pip3 install "graphifyy[mcp]" --break-system-packages` (prefer pip over
+  pipx here: pipx isolates the venv, so `python3 -m graphify.serve` — what the MCP entry
+  runs — can't find the module).
+
+The **`[mcp]` extra is required** for the MCP server: plain `graphifyy` installs only the
+extractor, and `graphify.serve` dies with `ImportError: mcp not installed`. Python must be
+3.10+ — on machines with several pythons, install into the SAME interpreter the MCP entry
+launches (`py` / `python3`), or the server fails with `No module named 'graphify'`; when
+in doubt, register the MCP with the full path to the right python instead of relying on
+PATH (old 3.6-era installers leave dead `python3` entries that macOS kills on sight).
 
 ## Build the graph (per repo, local only)
 
@@ -55,6 +64,13 @@ it, never put it in `dist/`. Refresh after big changes with `graphify extract . 
 `get_node`, `get_neighbors`, `shortest_path`, `get_community`, `god_nodes`, `graph_stats`
 (+ GitHub PR-impact tools). If graphify isn't installed the MCP just fails to connect and
 sessions keep working — the graph is an accelerator, never a blocker.
+
+**`graphify · ✘ failed` in `/mcp`?** Run the server command by hand from the repo root —
+the real error prints. Sits silently = the server is fine (Ctrl+C; check you launched
+claude from the repo root — the graph path is relative — and restart claude).
+`ImportError: mcp not installed` = missing extra. `No module named 'graphify'` = wrong
+python (install into the interpreter the entry runs, or use its full path). File not
+found = run the extract first. Killed instantly = dead python first on PATH (see Install).
 
 ## How sessions use it
 
