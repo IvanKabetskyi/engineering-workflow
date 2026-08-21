@@ -56,7 +56,6 @@ if (existsSync(root)) {
 const deps = {
   react: '^19.0.0', 'react-dom': '^19.0.0',
   '@reduxjs/toolkit': '^2.3.0', 'react-redux': '^9.1.2',
-  '@tanstack/react-query': '^5.59.0',
   'react-router-dom': '^6.28.0',
   formik: '^2.4.6', 'formik-validator-zod': '^2.0.1', zod: '^3.23.8',
   'react-use': '^17.4.0',
@@ -300,7 +299,6 @@ files['src/assets/theme.ts'] = themeByUi[ui];
 files['src/main.tsx'] = `import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 ${p.imp}
 import { store } from 'store';
 
@@ -308,18 +306,10 @@ import { theme } from 'assets/theme';
 
 import { App } from './App';
 
-const QUERY_RETRIES = 1;
-
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: QUERY_RETRIES, refetchOnWindowFocus: false } },
-});
-
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-${wrapJsx(['<App />'], 8)}
-      </QueryClientProvider>
+${wrapJsx(['<App />'], 6)}
     </Provider>
   </React.StrictMode>,
 );
@@ -457,12 +447,38 @@ import restApi from 'services/api';
 
 export const fetchHealth = (): Promise<HealthResponse> => restApi.get('/health').then((response) => response.data);
 `;
-  files['src/hooks/useHealth.ts'] = `import { UseQueryResult, useQuery } from '@tanstack/react-query';
+  files['src/hooks/useHealth.ts'] = `import { useCallback, useEffect, useState } from 'react';
 
 import { HealthResponse } from 'requests/health/types';
 import { fetchHealth } from 'requests/health';
 
-export const useHealth = (): UseQueryResult<HealthResponse> => useQuery({ queryKey: ['health'], queryFn: fetchHealth });
+type UseHealthResult = {
+  health: HealthResponse | null;
+  isLoading: boolean;
+  isError: boolean;
+  refetch: () => void;
+};
+
+export const useHealth = (): UseHealthResult => {
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  const load = useCallback((): void => {
+    setIsLoading(true);
+    setIsError(false);
+    fetchHealth()
+      .then(setHealth)
+      .catch(() => setIsError(true))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { health, isLoading, isError, refetch: load };
+};
 `;
 } else {
   files['src/core/apollo/index.ts'] = `import { ApolloClient, InMemoryCache } from '@apollo/client';
@@ -524,7 +540,6 @@ import { render, RenderOptions } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 ${p.imp}
 
@@ -546,13 +561,9 @@ export const renderWithProviders = (ui: ReactElement, options: Options = {}): Re
   const { preloadedState, initialEntries = ['/'], ...renderOptions } = options;
   const store = configureStore({ reducer: rootReducer, preloadedState });
 
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-
   const Wrapper = ({ children }: { children: ReactNode }): ReactElement => (
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-${wrapJsx(['<MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>'], 8)}
-      </QueryClientProvider>
+${wrapJsx(['<MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>'], 6)}
     </Provider>
   );
 

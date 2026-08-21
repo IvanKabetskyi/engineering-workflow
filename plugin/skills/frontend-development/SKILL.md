@@ -159,11 +159,13 @@ project creation and recorded; frontend and backend of one product use the SAME 
 - GraphQL repos: operations in `requests/` with hand-written types (no codegen `__generated__`);
   grid queries use `network-only` + `nextFetchPolicy` + `notifyOnNetworkStatusChange` — not
   `no-cache`.
-- **Server state in NEW REST apps: TanStack Query** (decision updated 2026-08-20) —
-  `useQuery`/`useMutation` over the typed request functions (the seam is unchanged: query
-  functions ARE the request modules, so tests still mock the modules, never react-query).
-  Query keys as constants; invalidation named per mutation. RTK holds UI state only.
-  dispatch-assist (Apollo) and other GraphQL repos keep their client — no react-query there.
+- **Server state lives in plain data hooks over the typed request functions** — no
+  server-state library (react-query/SWR are NOT used). A data hook per operation/page
+  owns `data`, `isLoading`, `isError`, `refetch` on useState/useEffect and calls the
+  request module; the request modules stay the only transport seam and the only thing
+  tests mock. Caching or invalidation beyond what a hook holds is an architecture
+  decision, never an imported default. RTK holds UI state only — server data is never
+  copied into the store. GraphQL repos keep Apollo.
 - Hooks split reads from writes: a data hook (query/loading/error) and an actions hook
   (mutations) — never mixed in one hook.
 - Deleting a "duplicate" request requires proving the semantics match (a mutation's loading

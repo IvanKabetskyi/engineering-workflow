@@ -59,7 +59,7 @@ and writes the same files by hand — the `files` map in the CLI IS the template
   `core/apollo` for GraphQL, `translations` with intl).
 - **React: LATEST (19)** — new projects are not bound by dispatch-assist's single-spa/
   legacy-library ceiling (that repo stays on 18; new apps don't inherit its constraints).
-- **TanStack Query** for server state (queries/caching/invalidation) over the typed request
+- **Plain data hooks** for server state (useState/useEffect) over the typed request
   functions; RTK keeps UI state. Example: `src/hooks/useHealth.ts`.
 - **Forms stack**: formik + formik-validator-zod + zod installed (decision B canon).
 - **Tests**: Vitest + jsdom + RTL wired in `vite.config.ts` (`test` block shares the
@@ -87,7 +87,7 @@ architecture + domain-modeling skills before the first feature.
 - The CLI's `files` map is the only template source — change conventions THERE, not in
   scaffolded projects retroactively.
 - Verified end-to-end 2026-08-20 on React 19 (npm install + tsc + eslint + vitest green):
-  joy+axios+intl+sockets (@mui/joy beta.52, react-intl 10, @tanstack/react-query 5) and
+  joy+axios+intl+sockets (@mui/joy beta.52, react-intl 10) and
   antd6+graphql. material shares the joy code path (@mui/material 9 + icons 9).
 - Version pins live in the CLI's deps matrix; bump deliberately, re-verify both flavors.
 
