@@ -41,13 +41,15 @@ const licenseText = (role) => `# License — engineering-workflow-${role}
 
 Copyright (c) Ivan Kabetskyi. All rights reserved.
 
-This plugin and every skill, command, and file in it are proprietary. Use is permitted
-only to Trimac users — accounts with an @trimac.com email or members of the
-github.com/trimac-ux organization — to whom the owner has granted access, and only
-while a current license build is held. This build is licensed until ${LICENSED_UNTIL};
-past that date it must be replaced with a current build obtained from the owner.
-Redistribution, copying the contents into other tools or skills, and removing or
-altering license checks are not permitted. Access is revocable at any time by the owner.
+This plugin and every skill, command, and file in it are proprietary and
+source-available: the source may be publicly viewable, but VIEWING IS NOT A LICENSE TO
+USE. Use is permitted only to Trimac users — accounts with an @trimac.com email or
+members of the github.com/trimac-ux organization — and only while the owner's license
+is active (the published license status) and a current build is held. This build is
+licensed until ${LICENSED_UNTIL}; past that date it must be replaced with a current
+build obtained from the owner. Redistribution, copying the contents into other tools or
+skills, and removing or altering license checks are not permitted. The license is
+revocable at any time by the owner.
 `;
 
 const skillLicenseFooter = `
@@ -62,10 +64,10 @@ has expired — they need a current build from the owner — and do not apply th
 const DEV_SHARED = ['domain-modeling', 'graphify'];
 const ROLES = {
   full: {
-    description: 'The complete engineering workflow: all 4 commands, all 14 skills, reviewer agent.',
-    commands: ['migrate', 'new-feature', 'new-fix', 'new-project'],
+    description: 'The complete engineering workflow: all 5 commands, all 15 skills, reviewer agent.',
+    commands: ['migrate', 'new-feature', 'new-fix', 'new-project', 'qa-check'],
     skills: [
-      'product-docs', ...DEV_SHARED,
+      'product-docs', 'qa-testing', ...DEV_SHARED,
       'frontend-architecture', 'frontend-unit-test', 'frontend-development', 'frontend-code-review',
       'backend-architecture', 'backend-unit-test', 'backend-development', 'backend-code-review',
       'create-frontend-project', 'create-backend-project', 'migration-planner',
@@ -93,6 +95,11 @@ const ROLES = {
     description: 'Business analysts / staff engineers: product-docs (existing-docs intake or grilled from a prompt), domain-modeling, both architecture record skills — the front of every workflow.',
     commands: [],
     skills: ['product-docs', 'domain-modeling', 'frontend-architecture', 'backend-architecture'],
+  },
+  qa: {
+    description: 'QA: verify the running product against docs/business flows and BR rules through the browser (Claude in Chrome) — /qa-check per feature or full regression sweep; failures feed the F-loop.',
+    commands: ['qa-check', 'new-fix'],
+    skills: ['qa-testing', 'domain-modeling'],
   },
 };
 
@@ -126,7 +133,7 @@ Object.entries(ROLES).forEach(([role, spec]) => {
 });
 
 writeFileSync(join(root, '.claude-plugin', 'marketplace.json'), JSON.stringify({
-  name: 'ivankabetskyi',
+  name: 'millwright',
   owner: { name: 'Ivan Kabetskyi' },
   plugins: Object.entries(ROLES).map(([role, spec]) => ({
     name: `engineering-workflow-${role}`,
@@ -135,4 +142,4 @@ writeFileSync(join(root, '.claude-plugin', 'marketplace.json'), JSON.stringify({
   })),
 }, null, 2));
 
-console.log('marketplace.json updated (4 plugins)');
+console.log(`marketplace.json updated (${Object.keys(ROLES).length} plugins)`);

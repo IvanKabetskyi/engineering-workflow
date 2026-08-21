@@ -183,6 +183,11 @@ const uiMcp = ui === 'antd'
 // Serves graphify-out/graph.json — run `graphify extract . --code-only` first (graphify skill).
 const graphifyMcp = { graphify: { command: 'py', args: ['-m', 'graphify.serve', 'graphify-out/graph.json'] } };
 files['.mcp.json'] = JSON.stringify({ mcpServers: { ...uiMcp, ...graphifyMcp } }, null, 2);
+// Team plugin distribution: whoever trusts this repo in Claude Code gets the marketplace + role plugin automatically.
+files['.claude/settings.json'] = JSON.stringify({
+  extraKnownMarketplaces: { millwright: { source: { source: 'github', repo: 'millwright-tools/engineering-workflow' } } },
+  enabledPlugins: { 'engineering-workflow-frontend@millwright': true },
+}, null, 2);
 files['.gitignore'] = ['node_modules', 'dist', 'coverage', '.env', '.idea', '.vscode', 'graphify-out/'].join('\n') + '\n';
 
 /* eslint: the dispatch-assist canon config, path groups matching the scaffolded structure */

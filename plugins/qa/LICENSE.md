@@ -1,4 +1,4 @@
-# License — engineering-workflow-analyst
+# License — engineering-workflow-qa
 
 Copyright (c) Ivan Kabetskyi. All rights reserved.
 

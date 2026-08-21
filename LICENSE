@@ -1,8 +1,11 @@
 Copyright (c) Ivan Kabetskyi. All rights reserved.
 
 This repository — the engineering-workflow plugin system, its skills, commands, agents,
-CLIs, and documentation — is proprietary. No license is granted by access to this
-repository. Use of the built plugins is permitted only to people the owner has granted
-access, only while holding a current (non-expired) build, and is revocable at any time.
-Redistribution, sublicensing, copying the contents into other tools, and removing or
-altering license checks are not permitted.
+CLIs, and documentation — is proprietary and source-available: the source is publicly
+viewable, but VIEWING IS NOT A LICENSE TO USE. Use of the plugins and CLIs is permitted
+only to Trimac users (accounts with an @trimac.com email, or work performed in
+repositories of the github.com/trimac-ux organization), and only while the owner's
+published license status is active and a current (non-expired) build is held.
+Redistribution, sublicensing, copying the contents into other tools or skills, and
+removing or altering the license checks are not permitted. The license is revocable at
+any time by the owner.

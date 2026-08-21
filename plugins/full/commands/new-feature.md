@@ -126,7 +126,9 @@ be able to continue exactly where this one stopped.
    FRESH context (or the read-only reviewer agent) — never the session that wrote the code.
    Findings → F-loop fix prompts. **The HUMAN is the final PASS**, not the report.
 7. **Done** — GATE: review report with PASS + human confirmation. Report changed files +
-   suggested commit message. NEVER run git commit.
+   suggested commit message. NEVER run git commit. If the qa-testing skill is installed,
+   end by suggesting `/qa-check <feature>` — browser verification of the feature's flows
+   against docs/business is the workflow's last mile.
 
 ## Override rule
 

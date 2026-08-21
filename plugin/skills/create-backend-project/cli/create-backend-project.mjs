@@ -240,6 +240,12 @@ files['.mcp.json'] = JSON.stringify({
   mcpServers: { graphify: { command: 'py', args: ['-m', 'graphify.serve', 'graphify-out/graph.json'] } },
 }, null, 2);
 
+// Team plugin distribution: whoever trusts this repo in Claude Code gets the marketplace + role plugin automatically.
+files['.claude/settings.json'] = JSON.stringify({
+  extraKnownMarketplaces: { millwright: { source: { source: 'github', repo: 'millwright-tools/engineering-workflow' } } },
+  enabledPlugins: { 'engineering-workflow-backend@millwright': true },
+}, null, 2);
+
 const authConfig = auth === 'jwt'
   ? `
     auth: {
