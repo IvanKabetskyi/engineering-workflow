@@ -3,13 +3,61 @@
  * master in plugin/. Run after ANY change to plugin/ and commit the output:
  *   node scripts/build-plugins.mjs
  */
-import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const master = join(root, 'plugin');
 const out = join(root, 'plugins');
+
+/* Every build carries a license expiry: 90 days from the build date. Distributed builds
+ * stop working past this date unless the user receives a newer build — the owner's
+ * access control. Override the window with LICENSE_DAYS=n node scripts/build-plugins.mjs */
+const LICENSE_DAYS = Number(process.env.LICENSE_DAYS || 90);
+const LICENSED_UNTIL = new Date(Date.now() + LICENSE_DAYS * 86400000).toISOString().slice(0, 10);
+
+/* Remote license flag — a URL the owner controls, checked by every command before running.
+ * Point it at a public gist raw URL serving {"status":"active"}; edit the gist to
+ * {"status":"revoked"} to recall the license instantly for all installs.
+ * Set your real gist URL here once (or pass LICENSE_URL=... at build time). While it still
+ * contains REPLACE_WITH, builds omit the remote check and rely on expiry only. */
+const LICENSE_URL = process.env.LICENSE_URL
+  || 'https://gist.githubusercontent.com/IvanKabetskyi/a340502020e8b30357e1c79775130ecb/raw/engineering-workflow-license.json';
+const remoteEnabled = !LICENSE_URL.includes('REPLACE_WITH');
+
+const stampCommand = (src) => {
+  let text = src.replaceAll('{{LICENSED_UNTIL}}', LICENSED_UNTIL);
+  if (remoteEnabled) {
+    text = text.replaceAll('{{LICENSE_URL}}', LICENSE_URL)
+      .replace(/<!-- remote-license-(start|end) -->\n/g, '');
+  } else {
+    text = text.replace(/<!-- remote-license-start -->[\s\S]*?<!-- remote-license-end -->\n/g, '');
+  }
+  return text;
+};
+
+const licenseText = (role) => `# License — engineering-workflow-${role}
+
+Copyright (c) Ivan Kabetskyi. All rights reserved.
+
+This plugin and every skill, command, and file in it are proprietary. Use is permitted
+only to Trimac users — accounts with an @trimac.com email or members of the
+github.com/trimac-ux organization — to whom the owner has granted access, and only
+while a current license build is held. This build is licensed until ${LICENSED_UNTIL};
+past that date it must be replaced with a current build obtained from the owner.
+Redistribution, copying the contents into other tools or skills, and removing or
+altering license checks are not permitted. Access is revocable at any time by the owner.
+`;
+
+const skillLicenseFooter = `
+
+## License
+
+Part of engineering-workflow (proprietary, (c) Ivan Kabetskyi), licensed until
+${LICENSED_UNTIL}. If today is later than that date, tell the user this build's license
+has expired — they need a current build from the owner — and do not apply this skill.
+`;
 
 const DEV_SHARED = ['domain-modeling', 'graphify'];
 const ROLES = {
@@ -61,11 +109,20 @@ Object.entries(ROLES).forEach(([role, spec]) => {
     author: { name: 'Ivan Kabetskyi' },
   }, null, 2));
 
-  spec.skills.forEach((skill) => cpSync(join(master, 'skills', skill), join(dir, 'skills', skill), { recursive: true }));
-  spec.commands.forEach((command) => cpSync(join(master, 'commands', `${command}.md`), join(dir, 'commands', `${command}.md`), { recursive: true }));
+  spec.skills.forEach((skill) => {
+    cpSync(join(master, 'skills', skill), join(dir, 'skills', skill), { recursive: true });
+    const skillMd = join(dir, 'skills', skill, 'SKILL.md');
+    writeFileSync(skillMd, readFileSync(skillMd, 'utf8') + skillLicenseFooter);
+  });
+  spec.commands.forEach((command) => {
+    mkdirSync(join(dir, 'commands'), { recursive: true });
+    const src = readFileSync(join(master, 'commands', `${command}.md`), 'utf8');
+    writeFileSync(join(dir, 'commands', `${command}.md`), stampCommand(src));
+  });
   if (spec.commands.length) cpSync(join(master, 'agents'), join(dir, 'agents'), { recursive: true });
+  writeFileSync(join(dir, 'LICENSE.md'), licenseText(role));
 
-  console.log(`plugins/${role}: ${spec.skills.length} skills, ${spec.commands.length} commands`);
+  console.log(`plugins/${role}: ${spec.skills.length} skills, ${spec.commands.length} commands, licensed until ${LICENSED_UNTIL}`);
 });
 
 writeFileSync(join(root, '.claude-plugin', 'marketplace.json'), JSON.stringify({

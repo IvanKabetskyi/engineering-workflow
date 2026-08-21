@@ -30,7 +30,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ivankabetskyi/engineering-workflow.git"
+    "url": "git+https://github.com/millwright-tools/engineering-workflow.git"
   },
   "publishConfig": {
     "access": "public"

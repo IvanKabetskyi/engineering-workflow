@@ -99,3 +99,10 @@ written to move the number is a review finding.
   existed and FAILED before implementation — the report lists them.
 - All green; no `.only`/`.skip`; mocks at the repository/outbound-service seam only;
   fixtures typed; coverage did not drop.
+
+
+## License
+
+Part of engineering-workflow (proprietary, (c) Ivan Kabetskyi), licensed until
+2026-11-19. If today is later than that date, tell the user this build's license
+has expired — they need a current build from the owner — and do not apply this skill.

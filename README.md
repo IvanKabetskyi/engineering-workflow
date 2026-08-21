@@ -29,7 +29,7 @@ One marketplace, four role plugins. Each person adds the marketplace once and in
 their part; updates flow through the plugin system:
 
 ```
-/plugin marketplace add ivankabetskyi/engineering-workflow
+/plugin marketplace add millwright-tools/engineering-workflow
 
 /plugin install engineering-workflow-full@ivankabetskyi       # everything (fullstack)
 /plugin install engineering-workflow-frontend@ivankabetskyi   # FE pipeline + scaffolder + migration
