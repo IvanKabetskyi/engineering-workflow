@@ -1,5 +1,5 @@
 {
-  "name": "ivankabetskyi",
+  "name": "millwright",
   "owner": {
     "name": "Ivan Kabetskyi"
   },
@@ -7,7 +7,7 @@
     {
       "name": "engineering-workflow-full",
       "source": "./plugins/full",
-      "description": "The complete engineering workflow: all 4 commands, all 14 skills, reviewer agent."
+      "description": "The complete engineering workflow: all 5 commands, all 15 skills, reviewer agent."
     },
     {
       "name": "engineering-workflow-frontend",
@@ -23,6 +23,11 @@
       "name": "engineering-workflow-analyst",
       "source": "./plugins/analyst",
       "description": "Business analysts / staff engineers: product-docs (existing-docs intake or grilled from a prompt), domain-modeling, both architecture record skills — the front of every workflow."
+    },
+    {
+      "name": "engineering-workflow-qa",
+      "source": "./plugins/qa",
+      "description": "QA: verify the running product against docs/business flows and BR rules through the browser (Claude in Chrome) — /qa-check per feature or full regression sweep; failures feed the F-loop."
     }
   ]
 }
