@@ -119,7 +119,7 @@ files['jest.config.js'] = `module.exports = {
     moduleDirectories: ['node_modules', '<rootDir>/src'],
     testTimeout: 30000,${db === 'mongo' ? `
     globalSetup: '<rootDir>/src/test/globalSetup.ts',
-    globalTeardown: '<rootDir>/src/test/globalTeardown.ts',
+    globalTeardown: '<rootDir>/src/test/globalTeardown.ts',` : ''}${db === 'mongo' || withRedis ? `
     setupFilesAfterEnv: ['<rootDir>/src/test/afterEnv.ts'],` : ''}
 };
 `;
@@ -134,6 +134,9 @@ if (db === 'mongo') {
 // The library default is 10s, which a first launch on macOS (especially Apple Silicon,
 // where Gatekeeper verifies the freshly downloaded binary) routinely exceeds.
 const LAUNCH_TIMEOUT_MS = 60000;
+// Pinned: an unpinned MongoMemoryServer resolves "latest" on every fresh machine and the
+// download intermittently 403s. Bump deliberately; MONGOMS_VERSION overrides for one run.
+const MONGO_BINARY_VERSION = process.env.MONGOMS_VERSION ?? '7.0.14';
 
 const globalSetup = async (): Promise<void> => {
     if (process.env.MONGO_URI) {
@@ -141,7 +144,10 @@ const globalSetup = async (): Promise<void> => {
     }
 
     try {
-        const mongod = await MongoMemoryServer.create({ instance: { launchTimeout: LAUNCH_TIMEOUT_MS } });
+        const mongod = await MongoMemoryServer.create({
+            binary: { version: MONGO_BINARY_VERSION },
+            instance: { launchTimeout: LAUNCH_TIMEOUT_MS },
+        });
 
         (globalThis as unknown as { mongod?: MongoMemoryServer }).mongod = mongod;
         process.env.MONGO_URI = mongod.getUri();
@@ -161,25 +167,6 @@ const globalSetup = async (): Promise<void> => {
 
 export default globalSetup;
 `;
-  files['src/test/afterEnv.ts'] = `import mongoose from 'mongoose';
-
-/* app.ts deliberately does not connect — server.ts owns the lifecycle in production and
- * this file owns it in tests. Without it every repository call buffers until it times out. */
-beforeAll(async () => {
-    await mongoose.connect(process.env.MONGO_URI ?? '');
-});
-
-afterEach(async () => {
-    const { collections } = mongoose.connection;
-
-    await Promise.all(Object.values(collections).map((collection) => collection.deleteMany({})));
-});
-
-afterAll(async () => {
-    await mongoose.connection.dropDatabase();
-    await mongoose.disconnect();
-});
-`;
   files['src/test/globalTeardown.ts'] = `import { MongoMemoryServer } from 'mongodb-memory-server';
 
 const globalTeardown = async (): Promise<void> => {
@@ -189,6 +176,35 @@ const globalTeardown = async (): Promise<void> => {
 };
 
 export default globalTeardown;
+`;
+}
+
+if (db === 'mongo' || withRedis) {
+  files['src/test/afterEnv.ts'] = `${db === 'mongo' ? "import mongoose from 'mongoose';" : ''}${withRedis ? `${db === 'mongo' ? '\n\n' : ''}import { redisClient } from 'services/connect-redis';` : ''}
+
+/* app.ts deliberately does not connect — server.ts owns the lifecycle in production and
+ * this file owns it in tests. Without it every repository call buffers until it times out.
+ * Per-TEST isolation: every collection is wiped and the run's own Redis db flushed after
+ * each test, so no row can depend on another row's leftovers. */
+beforeAll(async () => {${db === 'mongo' ? `
+    await mongoose.connect(process.env.MONGO_URI ?? '');` : ''}${withRedis ? `
+    await redisClient.connect();
+    await redisClient.flushDb(); // this run's own db index — see services/connect-redis` : ''}
+});
+
+afterEach(async () => {${db === 'mongo' ? `
+    const { collections } = mongoose.connection;
+
+    await Promise.all(Object.values(collections).map((collection) => collection.deleteMany({})));` : ''}${withRedis ? `
+    await redisClient.flushDb();` : ''}
+});
+
+afterAll(async () => {${db === 'mongo' ? `
+    await mongoose.connection.dropDatabase();
+    await mongoose.disconnect();` : ''}${withRedis ? `
+    await redisClient.flushDb();
+    await redisClient.quit();` : ''}
+});
 `;
 }
 
@@ -574,7 +590,7 @@ export default fromEntityToNoteDto;
 
 const repoImpl = db === 'mongo'
   ? `import httpStatus from 'http-status';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 import NoteEntity from 'domain/note/entity';
 
@@ -584,6 +600,14 @@ import { StatusError } from 'application/statusError';
 
 export class NoteRepository {
     private readonly noteModel: Model<NoteDocument> = NoteModel;
+
+    // A malformed id is "no such note", not a CastError surfacing as a 500. Every
+    // repository that looks up by id guards like this; the e2e below proves both paths.
+    private static assertObjectId(id: string): void {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new StatusError('Note not found', httpStatus.NOT_FOUND);
+        }
+    }
 
     async save(entity: NoteEntity): Promise<NoteEntity> {
         const document = await this.noteModel.create({
@@ -596,6 +620,7 @@ export class NoteRepository {
     }
 
     async getById(id: string): Promise<NoteEntity> {
+        NoteRepository.assertObjectId(id);
         const document = await this.noteModel.findById(id);
 
         if (!document) {
@@ -670,7 +695,28 @@ import config from 'config';
 
 import logger from 'utils/logger';
 
-export const redisClient = createClient({ url: config.redisUrl });
+/* Under test every run gets its OWN logical database, chosen from the worker id and the
+ * working directory, so two suites (or a review's mutant run in /tmp) on one machine never
+ * share keys. Redis ships 16 databases; an explicit "/n" in REDIS_URL is respected. */
+const HASH_BASE = 31;
+const HASH_MODULO = 2147483647;
+const HASH_SEED = 7;
+const REDIS_TEST_DB_COUNT = 15; // db 0 stays for humans; 1..15 for test runs
+const testDbIndex = (): number => {
+    const seed = ${"`"}\${process.env.JEST_WORKER_ID ?? '1'}:\${process.cwd()}${"`"};
+    const hash = [...seed].reduce((acc, ch) => (acc * HASH_BASE + ch.charCodeAt(0)) % HASH_MODULO, HASH_SEED);
+
+    return 1 + (hash % REDIS_TEST_DB_COUNT);
+};
+const urlForEnv = (): string => {
+    if (config.env !== 'intTest' || /\\/\\d+$/.test(config.redisUrl)) {
+        return config.redisUrl;
+    }
+
+    return ${"`"}\${config.redisUrl.replace(/\\/$/, '')}/\${testDbIndex()}${"`"};
+};
+
+export const redisClient = createClient({ url: urlForEnv() });
 
 export const connectRedis = async (): Promise<void> => {
     await redisClient.connect();
@@ -1008,6 +1054,9 @@ files['src/test/e2e/notes.test.ts'] = `import request from 'supertest';
 
 import app from 'app';
 
+// A syntactically valid id that no document has — distinct from a malformed one.
+const ABSENT_ID = ${db === 'mongo' ? "'000000000000000000000000'" : "'00000000-0000-4000-8000-000000000000'"};
+
 describe('notes', () => {
     it('creates and reads a note', async () => {
         const created = await request(app).post('/notes').send({ title: 'first', body: 'text' });
@@ -1028,8 +1077,14 @@ describe('notes', () => {
         expect(response.body.errors[0].path).toBe('title');
     });
 
-    it('404s on a missing note', async () => {
-        const response = await request(app).get('/notes/missing-id');
+    it('404s on a well-formed id that does not exist', async () => {
+        const response = await request(app).get(${"`"}/notes/\${ABSENT_ID}${"`"});
+
+        expect(response.status).toBe(404);
+    });
+
+    it('404s on a malformed id instead of 500ing on the cast', async () => {
+        const response = await request(app).get('/notes/not-an-id');
 
         expect(response.status).toBe(404);
     });

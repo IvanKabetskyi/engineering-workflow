@@ -20,10 +20,31 @@ F-loop); backend rules and detectors. Standalone full-audit mode reads every fil
 write path, unvalidated request input reaching a usecase, migration missing for a schema
 change — and every GATE VIOLATION (undecided business logic implemented; a shared module /
 DTO changed without the consumer map + human approval; a weakened test).
-**Major** = layer-rule violation, missing error case, DTO drift from the record, missing
-index for a list filter, coverage drop, `process.env` outside config.
-**Minor** = naming/pattern/style, file >200 lines.
+**Major** = a finding that cites one of: a BR number, a record section or DTO contract, a
+STRUCTURAL canon rule (layer breach — domain importing a framework, a controller touching a
+repository, a usecase seeing `req`, a model outside infrastructure, a DB boundary crossed
+without a mapper, missing requestDto validation, StatusError flow bypassed, cron without
+the lock, sockets without the adapter), a missing error case, a test that cannot fail (see
+Pass 3b), a coverage drop, or `process.env` outside config. A Major must name the rule and
+a concrete failure scenario; "this is not how we do it" without a rule is a Minor.
+**Minor** = naming, pattern and style: file >200 lines, comments, import depth,
+`console.log`, a missing index on a list filter, anything ESLint can be taught. Minors
+never block and NEVER become their own ticket — they go to the followups file (below).
 **PASS only with zero Critical AND zero Major.**
+
+**Severity is not a lever for thoroughness.** The MeetSpace stress test turned three Minors
+into three ninety-minute chain tickets and grew the queue by one ticket for every two
+shipped. The review is exhaustive; the consequences are proportionate.
+
+### Recorded exemptions
+
+A design record may carry an exemption line — `Exemption: <check> — <reason> — until
+<ticket id or date>` (for example in `docs/architecture/deployment.md`: `Exemption:
+socket-redis-adapter — replicaCount pinned at 1 — until T-xx`). A battery hit that a
+current exemption covers is reported as `[x1] exempt: <check> (record §, until …)` — not a
+finding, not silent. An exemption past its ticket/date is a Major (the debt came due).
+Without this, the canon and the ticket contradict each other and every reviewer re-finds
+the same Critical the ticket forbids fixing.
 
 ## Passes
 
@@ -90,10 +111,23 @@ decided failure behavior; event/cron handlers delegate to usecases; naming = dom
 
 ### Pass 3 — test integrity
 
-STEP-0 tests listed and were red first; every new/changed endpoint has an e2e (incl. the
-validation-failure case); mocks at the repository/outbound seam only; no weakened
-assertions (Critical); coverage didn't drop; e2e uses the test DB (NODE_ENV=intTest),
-never dev.
+STEP-0 tests listed and were red first (from the chain's step-0 log or the ticket's Tests
+list — do NOT re-run the suite to re-prove it); every new/changed endpoint has an e2e
+(incl. the validation-failure case); mocks at the repository/outbound seam only; no
+weakened assertions (Critical); coverage didn't drop; e2e uses the test DB
+(NODE_ENV=intTest), never dev; every new test names the BR / record section it pins.
+
+### Pass 3b — mutation probe (mandatory; reading alone misses this)
+
+Copy the changed implementation files to /tmp and mutate THERE — never in the repo: flip a
+status code, swap two error messages, change a constant, invert a guard, drop a `throw`,
+remove a revocation side-effect. Run the suite against each mutant. Any mutant the suite
+fails to kill is a test that decorates rather than tests → Major ("a test that cannot
+fail"), with the mutant as the failure scenario. Report every mutant tried and which
+survived. On MeetSpace this found a timing side-channel in the login path and an
+Admin-issued credential reset silently clobbered inside the argon2 window — both with a
+fully green suite. Five to eight mutants per ticket is the norm; the point is the ones that
+survive.
 
 ### Pass 4 — security
 
@@ -129,15 +163,32 @@ this field (check the FE repo's types when connected — the parity table from
 frontend-architecture)? A reshaped response with a live FE consumer and no coordination
 note = Critical. Events: payload type changes checked against every listener, both repos.
 
+## Scope of the read
+
+Review what the ticket changed: `git diff` + `git status` for new files, plus the Pass 0
+blast-radius list. Read the record sections the ticket cites (and the ticket's context
+extract when the chain provides `.chain/ctx/<id>.md`) rather than the whole record; open
+the full record only to check a contradiction or a cross-reference the extract lacks, and
+say so in the report. A repo with no git history cannot be diff-scoped — say so, and ask
+for a baseline commit.
+
 ## Report
 
-Same format as frontend-code-review (`[C1]/[M1]/[m1]`, File/Location/Problem/Fix/Rule) to
-`_fix_reports/review-<scope>-<date>.md`; verdict; surviving findings → lessons rule + fix
-prompt (F-loop). The reviewer never fixes code in pipeline mode.
+Same format as frontend-code-review (`[C1]/[M1]/[m1]/[x1]`, File/Location/Problem/Fix/Rule)
+to `_fix_reports/review-<scope>-<date>.md`; verdict; a `## Mutants` section (tried /
+survived).
+
+**Batching rule.** ALL Critical and Major findings of one review go into ONE fix prompt and
+get ONE re-review — not one round per finding. "One finding = one prompt" is reserved for a
+Critical that lands after a PASS (the F-loop). Minors are appended to the feature's
+followups file (`.chain/followups.md` in a chain, else `_fix_reports/followups.md`) under
+the ticket's heading, one line each, and are consumed by one sweep ticket per feature.
+
+The reviewer never fixes code in pipeline mode.
 
 
 ## License
 
 Part of engineering-workflow (proprietary, (c) Ivan Kabetskyi), licensed until
-2026-11-19. If today is later than that date, tell the user this build's license
+2026-11-20. If today is later than that date, tell the user this build's license
 has expired — they need a current build from the owner — and do not apply this skill.

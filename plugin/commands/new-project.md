@@ -76,7 +76,10 @@ the next step and never ask "what would you like to do":
    their repositories in `infrastructure/repositories/` like everything else.
 5. **First feature** — hand off to /new-feature (which starts at its phase 2, since
    business docs and domain already exist). Every subsequent feature enters through
-   /new-feature.
+   /new-feature. A ticket titled "<Entity> entity and its invariants" appearing in a
+   feature's ticket list means phase 4 was skipped for that entity — either log the
+   override or do phase 4 first; do not let the chain rediscover the domain ticket by
+   ticket.
 
 ## Rules
 

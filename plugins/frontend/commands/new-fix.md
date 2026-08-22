@@ -22,9 +22,9 @@ logged past.
    `github.com/trimac-ux`; or the user is the owner (Ivan Kabetskyi). If none can be
    confirmed: tell the user this plugin is licensed to Trimac (@trimac.com) users only
    and STOP completely.
-3. **Build expiry**: this build is licensed until **2026-11-19**. If today is
+3. **Build expiry**: this build is licensed until **2026-11-20**. If today is
    later: tell the user "This engineering-workflow build's license expired on
-   2026-11-19 — request a current build from the owner (Ivan Kabetskyi)" and
+   2026-11-20 — request a current build from the owner (Ivan Kabetskyi)" and
    STOP completely.
 
 ## Conductor behavior (this is why the command exists)
@@ -60,4 +60,11 @@ the next step and never ask "what would you like to do":
    and makes the commit ("fix(F<NN>): <title>").
 
 Frozen-prompt rule: once F<NN> has a report, its bytes never change — corrections ship as
-a new delta prompt. One finding = one prompt = one review round.
+a new delta prompt.
+
+Granularity: ALL Critical/Major findings from ONE review ride in ONE F-prompt and get ONE
+re-review. A single-finding prompt is for a Critical that lands after a PASS. A Minor is
+never an F-prompt and never a ticket — it goes to the feature's followups file
+(`_fix_reports/followups.md` or `.chain/followups.md`) and is consumed by one sweep ticket
+per feature. The MeetSpace run turned three Minors into three ninety-minute tickets; that
+is the failure this rule exists to prevent.

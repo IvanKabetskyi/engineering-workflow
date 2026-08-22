@@ -72,9 +72,21 @@ the pipeline (backend-unit-test → backend-development → backend-code-review)
   wipes collections per test; globalTeardown stops it). Set MONGO_URI yourself to run the
   same suite against a real engine — never the dev database.
 
+## Scaffold guarantees (fixed after the MeetSpace stress test)
+
+The generated project is green on `lint && tsc && test` before any feature work, and
+stays honest under a chain: `_id` is lint-clean (`no-underscore-dangle` off for documents);
+the example repository answers 404 on a malformed id (an `ObjectId.isValid` guard) and the
+e2e proves both the malformed and the well-formed-absent paths; `afterEnv.ts` connects
+mongoose (app.ts never does) and wipes every collection per test; the memory-server launch
+timeout is 60 s and its binary version is pinned; with `--redis` every test run gets its
+own Redis logical db (from `JEST_WORKER_ID` + cwd) flushed per test. If a generated
+project fails any of these, the CLI is wrong — fix the CLI, not just the project.
+
+
 
 ## License
 
 Part of engineering-workflow (proprietary, (c) Ivan Kabetskyi), licensed until
-2026-11-19. If today is later than that date, tell the user this build's license
+2026-11-20. If today is later than that date, tell the user this build's license
 has expired — they need a current build from the owner — and do not apply this skill.

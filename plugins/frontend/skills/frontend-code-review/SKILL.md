@@ -16,18 +16,29 @@ human commits. Also invokable standalone as a full audit (same passes, whole rep
 of the diff). The canon being enforced is frontend-development + frontend-unit-test; when a
 repo's own `.claude` skill adds rules, enforce those too.
 
-## Verdict (unchanged from the proven system)
+## Verdict (shared system)
 
 - **Critical** — production breaks, data loss, security hole, feature missing, build
   failure — **and every GATE VIOLATION**: undecided logic implemented (Logic Gate), a
   shared/global module changed without the consumer map + human approval (Shared/Global
   Change Gate), a test weakened to pass. Process breaches outrank bugs.
-- **Major** — feature partially broken, canon/architecture rule violated, missing error
-  handling or field mapping, data saved but not displayed, coverage dropped.
-- **Minor** — pattern/style deviations (component shape, file >200 lines, naming).
+- **Major** — a finding that cites a BR number, a record section / DTO contract, or a
+  STRUCTURAL canon rule (request-seam purity broken, a component calling axios/Apollo
+  directly, business computation in the UI that BR-28-style rules forbid, wrapper-isolation
+  breach, cross-page import, state in the wrong tier, two-tier validation unwired), feature
+  partially broken, missing error handling or field mapping, data saved but not displayed,
+  a test that cannot fail (Pass 3b), coverage dropped. A Major names the rule and a concrete
+  failure scenario.
+- **Minor** — pattern/style deviations: component shape, file >200 lines, naming, import
+  depth, comments, hardcoded hex, anything ESLint can be taught. Minors never block and
+  NEVER become their own ticket — they go to the followups file.
 - Design axis (when the parity pass runs): **design-major** (color/font/layout/control
   mismatch vs the captured spec) / **design-minor** (spacing/shadow drift).
 - **Verdict: PASS only with zero Critical AND zero Major.** Minors alone do not block.
+
+**Recorded exemptions**: a design record may carry `Exemption: <check> — <reason> — until
+<ticket or date>`; a battery hit it covers is reported as `[x1] exempt: …`, not a finding.
+An exemption past its date is a Major.
 
 ## The passes (in order)
 
@@ -64,10 +75,18 @@ purity, two-tier validation wiring, mutation-state contract, naming quality.
 
 ### Pass 3 — test integrity
 
-TDD order is verifiable: the report/PR lists STEP-0 tests and they were red first; no
-assertion weakened relative to the spec (a weakened test = Critical); mocks at the
-request-module seam ONLY; fixtures typed from Response types; no snapshots; coverage did
-not drop vs the recorded baseline.
+TDD order is verifiable: the report/PR (or the chain's step-0 log) lists STEP-0 tests and
+they were red first — do not re-run the suite to re-prove it; no assertion weakened
+relative to the spec (a weakened test = Critical); mocks at the request-module seam ONLY;
+fixtures typed from Response types; no snapshots; coverage did not drop vs the recorded
+baseline; every new test names the BR / record section it pins.
+
+### Pass 3b — mutation probe (mandatory)
+
+Copy the changed components/modules to /tmp, mutate there (swap a label, invert a
+condition, drop an error branch, change a status mapping, remove a disabled-state), run
+the suite against each mutant. A mutant the suite fails to kill = a test that decorates
+rather than tests → Major, mutant as the failure scenario. Report mutants tried / survived.
 
 ### Pass 4 — security & a11y
 
@@ -97,10 +116,17 @@ File / Location / Problem / Fix / Rule (lessons-learned or canon section)
 ### [M1] ... ### [m1] ...
 ```
 
-Every surviving Critical/Major becomes: a numbered lessons-learned rule (if new) + a fix
-prompt (`prompts/fixes/F<NN>` via the fix template) — the F-loop. Minors may batch into one
-cleanup prompt. The reviewer NEVER fixes code itself in pipeline mode — findings go to the
-report; the fix runs as its own gated work.
+**Scope**: `git diff` + `git status` for new files + the Pass 0 blast radius; the record
+sections the ticket cites (or `.chain/ctx/<id>.md`), not the whole record.
+
+**Batching rule.** ALL Critical and Major findings of one review go into ONE fix prompt
+(`prompts/fixes/F<NN>` via the fix template) and get ONE re-review — never one round per
+finding; a new numbered lessons rule where the finding is new. Minors go to the feature's
+followups file (`.chain/followups.md` in a chain, else `_fix_reports/followups.md`), one
+line each under the ticket's heading, consumed by one sweep ticket per feature — a Minor
+never becomes its own ticket. Add a `## Mutants` section (tried / survived). The reviewer
+NEVER fixes code itself in pipeline mode — findings go to the report; the fix runs as its
+own gated work.
 
 ## Standalone full-audit mode
 
@@ -114,5 +140,5 @@ See references/checks.md for the runnable battery and detector loops.
 ## License
 
 Part of engineering-workflow (proprietary, (c) Ivan Kabetskyi), licensed until
-2026-11-19. If today is later than that date, tell the user this build's license
+2026-11-20. If today is later than that date, tell the user this build's license
 has expired — they need a current build from the owner — and do not apply this skill.

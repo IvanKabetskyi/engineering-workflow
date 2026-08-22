@@ -23,9 +23,9 @@ logged past.
    `github.com/trimac-ux`; or the user is the owner (Ivan Kabetskyi). If none can be
    confirmed: tell the user this plugin is licensed to Trimac (@trimac.com) users only
    and STOP completely.
-3. **Build expiry**: this build is licensed until **2026-11-19**. If today is
+3. **Build expiry**: this build is licensed until **2026-11-20**. If today is
    later: tell the user "This engineering-workflow build's license expired on
-   2026-11-19 — request a current build from the owner (Ivan Kabetskyi)" and
+   2026-11-20 — request a current build from the owner (Ivan Kabetskyi)" and
    STOP completely.
 
 ## Conductor behavior (this is why the command exists)
@@ -54,6 +54,7 @@ artifacts:
   design-record: docs/architecture/<feature>.md
   step0-tests: <list of test files written red>
   review-report: _fix_reports/review-<feature>-<date>.md
+  followups: _fix_reports/followups.md   (Minors; one sweep ticket per feature)
 overrides: (none | list: what was skipped, WHY, who approved, date)
 ```
 
@@ -102,14 +103,54 @@ be able to continue exactly where this one stopped.
      Tests (STEP 0): <the failing tests this ticket starts with>
      ```
 
+   Two more fields are mandatory in every ticket body, and they are what makes a ticket
+   runnable unattended:
+
+     ```
+     Decisions: <record §s and dated Q-rulings every criterion traces to>
+     Open: none   # or the questions, grilled and answered BEFORE this file is written
+     ```
+
+   **Ticket readiness check (with the human present — this is the cheapest minute in the
+   whole workflow).** For each drafted ticket, before it is written to disk: (a) every
+   acceptance criterion that states a status code, a field, a limit, an ordering or a
+   who-may traces to a record section — if it does not, the record is amended first;
+   (b) list every rule in the ticket that could reasonably go two ways (two sections that
+   disagree, a deployment fact nobody stated, a "Do NOT" that collides with a canon rule)
+   and grill it NOW; (c) every blocker id exists. A question answered here costs two
+   minutes; the same question parked by the chain at 3 a.m. cost the MeetSpace run 7h35m
+   of 23h53m. Ticket 05 of that run embedded four such questions and took four attempts.
+
+   **Size rule.** A ticket has at most ~7 acceptance criteria and ONE endpoint family /
+   one entity slice. A ticket that does not fit is split at ticketing, not discovered to
+   be too big at 2 a.m. (MeetSpace ticket 05: 13 criteria, four attempts, and it gated
+   six other tickets while it was stuck.) Prefer shallow dependency graphs: when one
+   ticket blocks five, split the five's shared prerequisite out as its own small ticket.
+
+   **Corrections go to the record, not the ticket.** When a ruling changes a contract
+   (a 401 that becomes a 400), amend the record section and REGENERATE the ticket from it.
+   A ticket carrying a "CONTRACT CORRECTION" box or a struck-through criterion is a record
+   defect made visible — the agent reads both versions and parks a question.
+
+   **Minors are not tickets.** A review Minor goes to the feature's followups file
+   (`.chain/followups.md` / `_fix_reports/followups.md`); one sweep ticket per feature
+   consumes it. Never cut a ticket from a Minor.
+
    This phase is NOT done until the tickets exist on disk. If the to-spec/to-tickets
    skills are available, ALSO publish to the tracker — but the disk tickets are the
    workflow's native mechanism and never depend on them.
 4./5. **Tests + Implement — PER TICKET, one ticket per session.** GATE: tickets exist and
    the human confirmed the record. The loop every session runs:
    a. Pick the FIRST ticket with `status: todo` whose `depends-on` are all `done`
-      (none eligible + none doing → the feature is blocked; say why and stop).
-   b. Set it `status: doing`. Write ITS STEP-0 tests from the record, verify they FAIL,
+      (none eligible + none doing → the feature is blocked; say why and stop). Read THAT
+      ticket and the record sections it cites (`Decisions:` line, one hop of
+      cross-references, the glossary and error tables) — not every ticket file and not
+      the whole record. The record is read once per ticket, not once per phase.
+   a2. SCAN before writing anything: list the decisions the ticket relies on and the
+      section that makes each; anything undecided is a question for the human NOW,
+      before a single test file exists — a deferred ticket must leave zero files behind.
+   b. Set it `status: doing`. Write ITS STEP-0 tests from the record (the *-unit-test
+      skill is the canon for seams and shape), verify they FAIL, verify each one CAN fail,
       list them in the ticket file.
    c. Implement THAT TICKET ONLY (frontend/backend-development; both in-prompt gates
       apply — undecided logic goes back to phase 3, not forward; files outside the
@@ -117,14 +158,17 @@ be able to continue exactly where this one stopped.
       touching any module two+ places import, map its consumers with graphify
       `get_neighbors` (manual grep is the fallback, not the default).
    d. Tests green → set `status: done`, update the state file, REPORT which ticket is
-      next, and STOP. The next session (or the next loop iteration in a long Cowork
+      next, and STOP. A ticket whose gate is red twice is HALTED for the human, not
+      retried a third time; the tree must be green before the next ticket starts. The next session (or the next loop iteration in a long Cowork
       session) picks up ticket by ticket the same way — but even in one long session,
       NEVER work two tickets at once and never skip the status updates: the ticket files
       are what let any fresh session, on any surface, continue exactly where work stopped.
 6. **Review** — GATE: all tickets done (or the human closes the feature with logged
    overrides for open ones). Run frontend-code-review / backend-code-review in a
    FRESH context (or the read-only reviewer agent) — never the session that wrote the code.
-   Findings → F-loop fix prompts. **The HUMAN is the final PASS**, not the report.
+   ALL Critical/Major findings of one review → ONE fix prompt → ONE re-review; Minors →
+   the followups file, then one sweep ticket. **The HUMAN is the final PASS**, not the
+   report.
 7. **Done** — GATE: review report with PASS + human confirmation. Report changed files +
    suggested commit message. NEVER run git commit. If the qa-testing skill is installed,
    end by suggesting `/qa-check <feature>` — browser verification of the feature's flows

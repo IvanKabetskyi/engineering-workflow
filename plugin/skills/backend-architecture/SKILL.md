@@ -62,6 +62,19 @@ run create-backend-project first, then this skill for the first feature.
   needs — only what the business docs justify (YAGNI).
 - **Open decisions**: owner + what blocks on each.
 
+**Record hygiene (both architecture skills).** Sections are numbered (`## 3. Endpoints`)
+because tickets cite them (`Record: booking.md §3`) and the chain extracts exactly the cited
+sections plus one hop of cross-references for each ticket — an unnumbered record is read
+whole, 177 KB at a time. Every status code, field, limit and who-may a ticket will state
+lives in a section the ticket can cite. A ruling that changes a section (a 401 that becomes
+a 400) is applied to the section with a dated note; the ticket is regenerated — a record
+with two competing sentences is what the chain parks questions on. Deliberate debt gets an
+`Exemption: <review check> — <reason> — until <ticket or date>` line in the section that
+owns it (e.g. `Exemption: socket-redis-adapter — replicaCount pinned at 1 — until T-xx` in
+the deployment record); the review reports it as exempt instead of re-finding the same
+Critical every ticket. Keep the record under ~60 KB per feature; split by area
+(`authentication.md`, `booking.md`, `deployment.md`) before it grows past that.
+
 ## Process (mandatory)
 
 Every decision grilled one at a time with a recommendation; architecture-level calls (new

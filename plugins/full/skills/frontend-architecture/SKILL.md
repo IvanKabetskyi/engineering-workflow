@@ -92,6 +92,19 @@ architecture-level calls (new dependency, new shared component, state-shape chan
 contract changes) additionally go through llm-council.** Publish the record with to-spec;
 break the work into tracer-bullet tickets with to-tickets (each ticket = one pipeline run).
 
+**Record hygiene (both architecture skills).** Sections are numbered (`## 3. Endpoints`)
+because tickets cite them (`Record: booking.md §3`) and the chain extracts exactly the cited
+sections plus one hop of cross-references for each ticket — an unnumbered record is read
+whole, 177 KB at a time. Every status code, field, limit and who-may a ticket will state
+lives in a section the ticket can cite. A ruling that changes a section (a 401 that becomes
+a 400) is applied to the section with a dated note; the ticket is regenerated — a record
+with two competing sentences is what the chain parks questions on. Deliberate debt gets an
+`Exemption: <review check> — <reason> — until <ticket or date>` line in the section that
+owns it (e.g. `Exemption: socket-redis-adapter — replicaCount pinned at 1 — until T-xx` in
+the deployment record); the review reports it as exempt instead of re-finding the same
+Critical every ticket. Keep the record under ~60 KB per feature; split by area
+(`authentication.md`, `booking.md`, `deployment.md`) before it grows past that.
+
 ## Handoff to the pipeline
 
 STEP-0 tests (frontend-unit-test) are written FROM this record + the design spec: the
@@ -115,5 +128,5 @@ silently outruns it.
 ## License
 
 Part of engineering-workflow (proprietary, (c) Ivan Kabetskyi), licensed until
-2026-11-19. If today is later than that date, tell the user this build's license
+2026-11-20. If today is later than that date, tell the user this build's license
 has expired — they need a current build from the owner — and do not apply this skill.

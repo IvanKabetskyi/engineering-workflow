@@ -84,10 +84,35 @@ Team usage documentation lives in Confluence.
 
 1. Artifacts gate phases; stub artifacts are prohibited (a fake record is worse than none).
 2. Overrides are legal but LOGGED — visible skip beats silent skip.
-3. Tests are written first, from the record, and must fail before implementation.
+3. Tests are written first, from the record, must fail before implementation — and must be
+   able to fail (the review's mutation probe checks).
 4. Review runs in a fresh context (or the reviewer agent) — never the session that wrote
    the code. Gate violations are Critical. The human is the final PASS.
 5. The AI never runs `git commit`.
+6. Decisions are made at ticketing, with the human present — a ticket lists the record
+   sections every criterion traces to and ships with `Open: none`. Corrections amend the
+   record and regenerate the ticket; they never live in the ticket.
+7. Consequences are proportionate: all Critical/Major findings of one review → one fix
+   prompt → one re-review; Minors → a followups file → one sweep ticket per feature. A
+   Minor is never a ticket.
+
+## Running the implement phase unattended
+
+`/new-feature` phases 4/5 are the same loop the `chain-runner` skill automates in tmux.
+Its phase prompts invoke this plugin's canon skills (`*-unit-test`, `*-development`,
+`*-code-review`), park questions BEFORE any test file is written, shelve a deferred
+ticket's files with `git stash`, gate every ticket on a green tree, and halt a ticket after
+two red gates. The project must be a git repository with a baseline commit.
+
+## What the MeetSpace stress test changed (0.3.0)
+
+Three days, four chain runs, 12 green of 37: verification was 1.8% of the time; review +
+fix were 53%; 7h35m traced to three questions nobody was awake to answer; the queue grew one
+ticket per two shipped because Minors became tickets. 0.3.0 answers each: ticket readiness
+check and size rule at ticketing; Major narrowed to BR / contract / structural-canon /
+cannot-fail-test; mutation probe mandatory in review; findings batched; followups file;
+recorded exemptions; numbered record sections and per-ticket extracts; Redis test isolation
+and a pinned mongo binary in the scaffold; malformed ids answer 404.
 
 ## License
 

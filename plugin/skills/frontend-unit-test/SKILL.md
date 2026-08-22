@@ -31,6 +31,18 @@ Jest 30 + `jest-environment-jsdom` + `@testing-library/react` + `@testing-librar
 run the one-time bootstrap FIRST — references/bootstrap.md has the exact packages, jest
 config, and helper code. Never write component tests against a node test environment.
 
+## A test must be able to fail
+
+Before a STEP-0 test is finished, ask: if the behaviour it names were broken — wrong
+status, swapped error message, a constant changed, a guard removed — would this test go
+red? A test that would still pass is not finished. The review's mutation probe (Pass 3b)
+checks exactly this, and a surviving mutant is a Major against the test, not the code. On
+MeetSpace, three of ticket 13's four Majors were step-0 tests that could not fail.
+
+Every test names, on the line a reader meets it, the BR number or record section it pins
+(`// BR-31`, `// authentication.md §5`) — a row with no authority is a row nobody can
+judge when the record changes.
+
 ## The mock seam: request modules, NEVER the transport
 
 The repo's own request modules/hooks (`src/requests/*`, `pages/*/requests/*`,

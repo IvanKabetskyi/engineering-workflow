@@ -45,6 +45,36 @@ runs against a real engine by just setting MONGO_URI):
 Never the dev database, in any mode. A team may point MONGO_URI at a dedicated intTest
 database (driver-rest-service approach) — the setup above already supports it unchanged.
 
+**Redis is isolated the same way, and it is not optional.** Under `NODE_ENV=intTest`
+`services/connect-redis` picks a logical database (1–15) from `JEST_WORKER_ID` + the
+working directory, and `afterEnv.ts` flushes it in `beforeAll`, `afterEach` and
+`afterAll`. Two suites on one machine — the api chain's gate and a reviewer's mutant run
+in /tmp, say — therefore never share a key. MeetSpace ran both on db 15: `login.test.ts`
+failed one gate in four and three of three when run alone, every red cost a full
+fix→review→gate loop, and some greens were unverified. TDD does not protect against this;
+TDD is what makes a flaky red expensive, because the chain trusts every red.
+
+**The mongo binary is pinned** (`MONGO_BINARY_VERSION` in globalSetup; `MONGOMS_VERSION`
+overrides one run). Unpinned, a fresh machine resolves "latest" and the download
+intermittently 403s.
+
+**Malformed ids are 404, never 500.** Every repository lookup by id guards
+`Types.ObjectId.isValid` before `findById`; the endpoint's e2e has BOTH rows — a
+well-formed absent id and a malformed one — because a test that only uses `'missing-id'`
+passes against a 500 on the cast and hides the defect (scaffold defect D2).
+
+## A test must be able to fail
+
+Before a STEP-0 test is finished, ask: if the behaviour it names were broken — wrong
+status, swapped error message, a constant changed, a guard removed — would this test go
+red? A test that would still pass is not finished. The review's mutation probe (Pass 3b)
+checks exactly this, and a surviving mutant is a Major against the test, not the code. On
+MeetSpace, three of ticket 13's four Majors were step-0 tests that could not fail.
+
+Every test names, on the line a reader meets it, the BR number or record section it pins
+(`// BR-31`, `// authentication.md §5`) — a row with no authority is a row nobody can
+judge when the record changes.
+
 ## Two layers, both mandatory per operation
 
 ### 1. Unit tests — the repository seam
@@ -104,5 +134,5 @@ written to move the number is a review finding.
 ## License
 
 Part of engineering-workflow (proprietary, (c) Ivan Kabetskyi), licensed until
-2026-11-19. If today is later than that date, tell the user this build's license
+2026-11-20. If today is later than that date, tell the user this build's license
 has expired — they need a current build from the owner — and do not apply this skill.

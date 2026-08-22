@@ -23,9 +23,9 @@ logged past.
    `github.com/trimac-ux`; or the user is the owner (Ivan Kabetskyi). If none can be
    confirmed: tell the user this plugin is licensed to Trimac (@trimac.com) users only
    and STOP completely.
-3. **Build expiry**: this build is licensed until **2026-11-19**. If today is
+3. **Build expiry**: this build is licensed until **2026-11-20**. If today is
    later: tell the user "This engineering-workflow build's license expired on
-   2026-11-19 — request a current build from the owner (Ivan Kabetskyi)" and
+   2026-11-20 — request a current build from the owner (Ivan Kabetskyi)" and
    STOP completely.
 
 ## Conductor behavior (this is why the command exists)

@@ -162,8 +162,10 @@ plays that role.)
   as a NEW delta prompt. Keeps report↔prompt traceability.
 - **F-loop for findings**: review finding → lessons-learned rule + numbered fix prompt
   (`prompts/fixes/F<NN>-*.md` from `references/fix-prompt-template.md`); each fix starts
-  with a failing test reproducing the finding (TDD applies to fixes too). One finding = one
-  prompt = one review round.
+  with a failing test reproducing the finding (TDD applies to fixes too). ALL Critical/Major
+  findings of one review ride in ONE fix prompt and get ONE re-review; "one finding = one
+  prompt" is for a Critical that lands after a PASS. Minors go to the followups file, never
+  to a prompt of their own.
 - **Deferred smoke**: manual checks that can't run headless go into a DEFERRED SMOKE
   section of each report; they execute against the DEPLOYED old app side-by-side.
 

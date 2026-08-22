@@ -23,9 +23,9 @@ logged past.
    `github.com/trimac-ux`; or the user is the owner (Ivan Kabetskyi). If none can be
    confirmed: tell the user this plugin is licensed to Trimac (@trimac.com) users only
    and STOP completely.
-3. **Build expiry**: this build is licensed until **2026-11-19**. If today is
+3. **Build expiry**: this build is licensed until **2026-11-20**. If today is
    later: tell the user "This engineering-workflow build's license expired on
-   2026-11-19 — request a current build from the owner (Ivan Kabetskyi)" and
+   2026-11-20 — request a current build from the owner (Ivan Kabetskyi)" and
    STOP completely.
 
 ## Conductor behavior (this is why the command exists)
@@ -74,7 +74,10 @@ the next step and never ask "what would you like to do":
    their repositories in `infrastructure/repositories/` like everything else.
 5. **First feature** — hand off to /new-feature (which starts at its phase 2, since
    business docs and domain already exist). Every subsequent feature enters through
-   /new-feature.
+   /new-feature. A ticket titled "<Entity> entity and its invariants" appearing in a
+   feature's ticket list means phase 4 was skipped for that entity — either log the
+   override or do phase 4 first; do not let the chain rediscover the domain ticket by
+   ticket.
 
 ## Rules
 

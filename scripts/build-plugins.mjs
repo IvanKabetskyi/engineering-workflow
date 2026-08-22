@@ -112,7 +112,7 @@ Object.entries(ROLES).forEach(([role, spec]) => {
   writeFileSync(join(dir, '.claude-plugin', 'plugin.json'), JSON.stringify({
     name: `engineering-workflow-${role}`,
     description: spec.description,
-    version: '0.2.0',
+    version: '0.3.0',
     author: { name: 'Ivan Kabetskyi' },
   }, null, 2));
 
