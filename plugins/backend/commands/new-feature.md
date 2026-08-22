@@ -85,60 +85,19 @@ be able to continue exactly where this one stopped.
    `get_community` to find existing code the feature should reuse instead of duplicating.
    Then run frontend-architecture and/or backend-architecture (design intake, contracts,
    grilled record). TWO artifacts leave this phase:
-   - the design record (`docs/architecture/<feature>.md`);
-   - **the ticket files** — `docs/workflow/tickets/<feature>/T-01-<slug>.md`, T-02, … —
-     the record SPLIT into tracer-bullet tickets, each sized for ONE session. Ticket
-     format (frontmatter + body):
-
-     ```
-     ---
-     id: T-03
-     title: Room create endpoint
-     depends-on: [T-01, T-02]
-     status: todo        # todo | doing | done | blocked
-     ---
-     Goal: <one sentence>
-     Scope: <exact files/folders this ticket may touch>
-     Rules: <BR-numbers and record sections this implements>
-     Tests (STEP 0): <the failing tests this ticket starts with>
-     ```
-
-   Two more fields are mandatory in every ticket body, and they are what makes a ticket
-   runnable unattended:
-
-     ```
-     Decisions: <record §s and dated Q-rulings every criterion traces to>
-     Open: none   # or the questions, grilled and answered BEFORE this file is written
-     ```
-
-   **Ticket readiness check (with the human present — this is the cheapest minute in the
-   whole workflow).** For each drafted ticket, before it is written to disk: (a) every
-   acceptance criterion that states a status code, a field, a limit, an ordering or a
-   who-may traces to a record section — if it does not, the record is amended first;
-   (b) list every rule in the ticket that could reasonably go two ways (two sections that
-   disagree, a deployment fact nobody stated, a "Do NOT" that collides with a canon rule)
-   and grill it NOW; (c) every blocker id exists. A question answered here costs two
-   minutes; the same question parked by the chain at 3 a.m. cost the MeetSpace run 7h35m
-   of 23h53m. Ticket 05 of that run embedded four such questions and took four attempts.
-
-   **Size rule.** A ticket has at most ~7 acceptance criteria and ONE endpoint family /
-   one entity slice. A ticket that does not fit is split at ticketing, not discovered to
-   be too big at 2 a.m. (MeetSpace ticket 05: 13 criteria, four attempts, and it gated
-   six other tickets while it was stuck.) Prefer shallow dependency graphs: when one
-   ticket blocks five, split the five's shared prerequisite out as its own small ticket.
-
-   **Corrections go to the record, not the ticket.** When a ruling changes a contract
-   (a 401 that becomes a 400), amend the record section and REGENERATE the ticket from it.
-   A ticket carrying a "CONTRACT CORRECTION" box or a struck-through criterion is a record
-   defect made visible — the agent reads both versions and parks a question.
-
-   **Minors are not tickets.** A review Minor goes to the feature's followups file
-   (`.chain/followups.md` / `_fix_reports/followups.md`); one sweep ticket per feature
-   consumes it. Never cut a ticket from a Minor.
+   - the design record (`docs/architecture/<feature>.md`, numbered sections);
+   - **the ticket files** — produced by the **ticketing skill** (invoke it; never cut
+     tickets inline and never with a generic ticket splitter): the record SPLIT into
+     tracer-bullet tickets under `docs/workflow/tickets/<feature>/T-NN-<slug>.md`, each
+     sized for ONE session, each citing the record sections every criterion traces to,
+     each leaving the ticketing readiness check with `Open: none` because every two-way
+     rule was grilled with the human BEFORE the file was written. The ticketing skill owns
+     the format, the size rule, regeneration after a record correction, the followups
+     sweep ticket, and the chain handoff (enqueue line, gates.txt).
 
    This phase is NOT done until the tickets exist on disk. If the to-spec/to-tickets
-   skills are available, ALSO publish to the tracker — but the disk tickets are the
-   workflow's native mechanism and never depend on them.
+   skills are available, ALSO publish the approved set to the tracker (ticketing §8) —
+   but the disk tickets are the workflow's native mechanism and never depend on them.
 4./5. **Tests + Implement — PER TICKET, one ticket per session.** GATE: tickets exist and
    the human confirmed the record. The loop every session runs:
    a. Pick the FIRST ticket with `status: todo` whose `depends-on` are all `done`

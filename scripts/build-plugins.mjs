@@ -61,10 +61,10 @@ ${LICENSED_UNTIL}. If today is later than that date, tell the user this build's 
 has expired — they need a current build from the owner — and do not apply this skill.
 `;
 
-const DEV_SHARED = ['domain-modeling', 'graphify'];
+const DEV_SHARED = ['domain-modeling', 'graphify', 'ticketing'];
 const ROLES = {
   full: {
-    description: 'The complete engineering workflow: all 5 commands, all 15 skills, reviewer agent.',
+    description: 'The complete engineering workflow: all 5 commands, all 16 skills, reviewer agent.',
     commands: ['migrate', 'new-feature', 'new-fix', 'new-project', 'qa-check'],
     skills: [
       'product-docs', 'qa-testing', ...DEV_SHARED,
@@ -94,7 +94,7 @@ const ROLES = {
   analyst: {
     description: 'Business analysts / staff engineers: product-docs (existing-docs intake or grilled from a prompt), domain-modeling, both architecture record skills — the front of every workflow.',
     commands: [],
-    skills: ['product-docs', 'domain-modeling', 'frontend-architecture', 'backend-architecture'],
+    skills: ['product-docs', 'domain-modeling', 'frontend-architecture', 'backend-architecture', 'ticketing'],
   },
   qa: {
     description: 'QA: verify the running product against docs/business flows and BR rules through the browser (Claude in Chrome) — /qa-check per feature or full regression sweep; failures feed the F-loop.',

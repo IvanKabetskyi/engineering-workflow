@@ -57,12 +57,13 @@ regenerates `plugins/{full,frontend,backend,analyst}` and marketplace.json — c
 **Commands** (`plugin/commands/`): the four orchestrators above — thin conductors that
 check gates, invoke skills, and keep the state file. **Agent**: a read-only `reviewer`
 (review purity: it cannot edit, so it can never "just fix it"). **Skills**
-(`plugin/skills/`, 14):
+(`plugin/skills/`, 16):
 
 | Area | Skills |
 |---|---|
 | Front door | product-docs, domain-modeling |
 | Design | frontend-architecture, backend-architecture |
+| Tickets | ticketing (format, readiness check, size rule, chain handoff; to-tickets publishes) |
 | TDD | frontend-unit-test, backend-unit-test |
 | Canon | frontend-development, backend-development |
 | Review | frontend-code-review, backend-code-review |
@@ -76,7 +77,8 @@ Jest/supertest on the backend; Socket.IO with mirrored typed constants; graphify
 for inventories and review blast-radius.
 
 **Prerequisites** (personal/account skills, not bundled): grilling, llm-council,
-grill-with-docs, to-spec, to-tickets. For UI design intake, the Figma connection:
+grill-with-docs, to-spec; to-tickets is optional (tracker publishing only — ticket
+creation is the bundled ticketing skill). For UI design intake, the Figma connection:
 `claude plugin install figma@claude-plugins-official` (or the Figma Dev Mode local MCP).
 Team usage documentation lives in Confluence.
 

@@ -122,7 +122,7 @@ Produce:
   panels → cleanup/verification. Never "whole page with modal" in one chunk. Insert a
   remediation chunk whenever canon changes after chunks already ran.
 - One session + one human commit/PR per chunk. Table: number, chunk, prompt file, depends-on.
-- **Publish the plan with to-tickets**: each chunk becomes a tracer-bullet ticket with its
+- **Publish the plan with the ticketing skill (then to-tickets to publish)**: each chunk becomes a tracer-bullet ticket with its
   blocking edges (the depends-on column) in the tracker.
 - Every chunk prompt is self-contained, lives in `prompts/NN-name.md`, and follows
   `references/chunk-prompt-template.md` — including the TDD section and both gates.

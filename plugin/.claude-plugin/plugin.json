@@ -1,6 +1,6 @@
 {
   "name": "engineering-workflow",
-  "description": "Gated engineering workflow: /new-project, /new-feature, /migrate, /new-fix orchestrate 14 skills (business docs, domain modeling, architecture records, strict TDD, code canons, graph-assisted review, migration planning, project scaffolding) with artifact gates, logged overrides, and human-final-PASS.",
+  "description": "Gated engineering workflow: /new-project, /new-feature, /migrate, /new-fix orchestrate 16 skills (business docs, domain modeling, architecture records, ticketing, strict TDD, code canons, graph-assisted review, migration planning, project scaffolding) with artifact gates, logged overrides, and human-final-PASS.",
   "version": "0.3.0",
   "author": {
     "name": "Ivan Kabetskyi"

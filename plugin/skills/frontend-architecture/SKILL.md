@@ -90,7 +90,8 @@ if docs/ isn't used). Sections:
 **Process: every decision in the record is grilled (one at a time, recommendation first);
 architecture-level calls (new dependency, new shared component, state-shape changes,
 contract changes) additionally go through llm-council.** Publish the record with to-spec;
-break the work into tracer-bullet tickets with to-tickets (each ticket = one pipeline run).
+break the work into tickets with the **ticketing skill** (each ticket = one pipeline run;
+readiness check with the human, `Open: none`), then to-tickets to mirror them to a tracker.
 
 **Record hygiene (both architecture skills).** Sections are numbered (`## 3. Endpoints`)
 because tickets cite them (`Record: booking.md §3`) and the chain extracts exactly the cited

@@ -55,7 +55,7 @@ the next step and never ask "what would you like to do":
 3. **Inventories** — graph-first (graphify extract on source; MCP queries when registered;
    manual fallback): target-patterns.md verified against real files, source-map.md complete.
 4. **Chunk plan** — locked sizing (foundation → translations → grid per page → modal per
-   form → shell → panel batches → cleanup); written as DISK TICKETS (docs/workflow/tickets/<migration>/, same format as /new-feature — to-tickets additionally publishes to the tracker when available);
+   form → shell → panel batches → cleanup); written as DISK TICKETS by the ticketing skill (docs/workflow/tickets/<migration>/, same format and readiness check as /new-feature — to-tickets additionally publishes to the tracker when available);
    prompts generated from the chunk template (TDD STEP 0 + both gates in every prompt).
 5. **Execution** — tmux chains per the runner template: skip-if-report-exists,
    stop-on-missing-report, git commit/push disallowed, one report per prompt. Findings →
